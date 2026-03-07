@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ArrowLeft, Heart, Star, ChevronDown, Download, Lock, Server, ExternalLink, ChevronUp, X } from 'lucide-react';
+import { ArrowLeft, Heart, Star, Calendar, Clock, ChevronDown, Download, Lock, Server, ExternalLink, ChevronUp, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CastCard } from '@/components/movie/CastCard';
 import { MovieCard } from '@/components/movie/MovieCard';
@@ -485,15 +485,19 @@ export default function MovieDetailPage() {
           {/* Title and Meta */}
           <div className="flex-1 pb-2">
             <h1 className="text-white text-xl font-bold mb-2">{movie.title}</h1>
-            <div className="flex items-center text-sm text-gray-400">
-              <span>{movie.year}</span>
-              <span className="mx-2">•</span>
-              <span className="flex items-center gap-1">
-                <Star className="w-3.5 h-3.5" style={{ color: themeColor, fill: themeColor }} />
+            <div className="flex items-center gap-4 text-sm text-gray-400">
+              <div className="flex items-center gap-1">
+                <Calendar className="w-4 h-4" />
+                <span>{movie.year}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Star className="w-4 h-4" style={{ color: themeColor, fill: themeColor }} />
                 <span>{movie.rating.toFixed(1)}</span>
-              </span>
-              <span className="mx-2">•</span>
-              <span>{movie.duration} min</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Clock className="w-4 h-4" />
+                <span>{movie.duration} min</span>
+              </div>
             </div>
           </div>
         </div>
