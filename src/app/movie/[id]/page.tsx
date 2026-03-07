@@ -132,6 +132,18 @@ export default function MovieDetailPage() {
 
   const bookmarked = movie ? isBookmarked(movie.id, 'movie') : false;
 
+  // Prevent body scroll when download modal is open
+  useEffect(() => {
+    if (showDownloadModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [showDownloadModal]);
+
   const handleBookmark = () => {
     if (!movie) return;
 

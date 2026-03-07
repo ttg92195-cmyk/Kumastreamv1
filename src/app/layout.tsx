@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Sidebar } from "@/components/movie/Sidebar";
 import { BottomNav } from "@/components/movie/BottomNav";
+import ScrollHandler from "@/components/ScrollHandler";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -52,6 +53,7 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className={`${inter.variable} font-sans antialiased bg-[#0f0f0f] text-white`}>
+        <ScrollHandler />
         <Sidebar />
         <main className="min-h-screen">
           {children}
