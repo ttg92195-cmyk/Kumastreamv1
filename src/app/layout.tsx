@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Sidebar } from "@/components/movie/Sidebar";
 import { BottomNav } from "@/components/movie/BottomNav";
+import { PageTransition } from "@/components/PageTransition";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -53,9 +54,11 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} font-sans antialiased bg-[#0f0f0f] text-white`}>
         <Sidebar />
-        <main className="min-h-screen">
-          {children}
-        </main>
+        <PageTransition>
+          <main className="min-h-screen">
+            {children}
+          </main>
+        </PageTransition>
         <BottomNav />
         <Toaster />
       </body>
