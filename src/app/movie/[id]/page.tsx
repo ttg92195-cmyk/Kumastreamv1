@@ -580,7 +580,7 @@ export default function MovieDetailPage() {
             </div>
             
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ WebkitOverflowScrolling: 'touch' }}>
               {serverGroups.length > 0 ? (
                 // Custom server links
                 serverGroups.map((server, serverIndex) => (

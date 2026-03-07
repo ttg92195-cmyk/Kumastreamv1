@@ -11,14 +11,39 @@ export default function ScrollHandler() {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Reset body scroll styles when route changes
-    document.body.style.overflow = '';
-    document.body.style.position = '';
-    document.body.style.width = '';
-    document.body.style.height = '';
+    // Reset ALL body scroll styles when route changes
+    const resetScroll = () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.bottom = '';
+      document.body.style.margin = '';
+      document.body.style.padding = '';
+      
+      // Remove any data attributes that might affect scroll
+      document.body.removeAttribute('data-scroll-locked');
+      document.body.removeAttribute('data-lock');
+      document.body.removeAttribute('aria-hidden');
+      
+      // Reset html as well
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.height = '';
+    };
     
-    // Scroll to top on page change (optional, can be removed if not wanted)
-    // window.scrollTo(0, 0);
+    // Run reset immediately
+    resetScroll();
+    
+    // Also run after a small delay to catch any async scroll locks
+    const timeoutId = setTimeout(resetScroll, 100);
+    
+    return () => {
+      clearTimeout(timeoutId);
+      resetScroll();
+    };
   }, [pathname]);
 
   return null;

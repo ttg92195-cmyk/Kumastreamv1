@@ -468,7 +468,7 @@ export default function SeriesDetailPage() {
                                         </button>
 
                                         {expandedServer[ep.id] === serverIndex && (
-                                          <div className="border-t border-gray-700 p-2 max-h-[60vh] overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+                                          <div className="border-t border-gray-700 p-2 max-h-[60vh] overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
                                             <div className="space-y-2">
                                               {server.links.map((link, linkIndex) => (
                                               <div key={linkIndex} className="p-2 bg-gray-700/50 rounded flex items-center justify-between">
@@ -525,7 +525,7 @@ export default function SeriesDetailPage() {
                                         </button>
 
                                         {expandedServer[ep.id] === 0 && (
-                                          <div className="border-t border-gray-700 p-2 max-h-[60vh] overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+                                          <div className="border-t border-gray-700 p-2 max-h-[60vh] overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
                                             <div className="space-y-2">
                                               <div className="p-2 bg-gray-700/50 rounded flex items-center justify-between">
                                                 <div>
