@@ -103,41 +103,55 @@ export default function CollectionPage() {
         const universeKeywords = UNIVERSE_KEYWORDS[keyword];
         
         if (universeKeywords) {
-          // Fetch movies for all related keywords and combine
+          // Fetch all keywords in PARALLEL for faster loading
           const allMovies: Movie[] = [];
           const allSeries: Series[] = [];
           const movieIds = new Set<string>();
           const seriesIds = new Set<string>();
           
-          // Fetch for each keyword in the universe
-          for (const searchKeyword of universeKeywords) {
-            // Fetch movies
-            const moviesRes = await fetch(`/api/movies?search=${encodeURIComponent(searchKeyword)}&limit=9999`);
+          // Create all fetch promises at once
+          const fetchPromises = universeKeywords.map(async (searchKeyword) => {
+            const [moviesRes, seriesRes] = await Promise.all([
+              fetch(`/api/movies?search=${encodeURIComponent(searchKeyword)}&limit=500`),
+              fetch(`/api/series?search=${encodeURIComponent(searchKeyword)}&limit=500`)
+            ]);
+            
+            const results: { movies: Movie[]; series: Series[] } = { movies: [], series: [] };
+            
             if (moviesRes.ok) {
               const data = await moviesRes.json();
-              for (const m of data.movies) {
-                if (!movieIds.has(m.id)) {
-                  movieIds.add(m.id);
-                  allMovies.push({
-                    ...m,
-                    poster: m.poster || PLACEHOLDER_POSTER,
-                  });
-                }
-              }
+              results.movies = data.movies.map((m: Movie) => ({
+                ...m,
+                poster: m.poster || PLACEHOLDER_POSTER,
+              }));
             }
             
-            // Fetch series
-            const seriesRes = await fetch(`/api/series?search=${encodeURIComponent(searchKeyword)}&limit=9999`);
             if (seriesRes.ok) {
               const data = await seriesRes.json();
-              for (const s of data.series) {
-                if (!seriesIds.has(s.id)) {
-                  seriesIds.add(s.id);
-                  allSeries.push({
-                    ...s,
-                    poster: s.poster || PLACEHOLDER_POSTER,
-                  });
-                }
+              results.series = data.series.map((s: Series) => ({
+                ...s,
+                poster: s.poster || PLACEHOLDER_POSTER,
+              }));
+            }
+            
+            return results;
+          });
+          
+          // Wait for all requests to complete in parallel
+          const allResults = await Promise.all(fetchPromises);
+          
+          // Combine and deduplicate results
+          for (const result of allResults) {
+            for (const m of result.movies) {
+              if (!movieIds.has(m.id)) {
+                movieIds.add(m.id);
+                allMovies.push(m);
+              }
+            }
+            for (const s of result.series) {
+              if (!seriesIds.has(s.id)) {
+                seriesIds.add(s.id);
+                allSeries.push(s);
               }
             }
           }
