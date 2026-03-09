@@ -340,7 +340,7 @@ export default function SettingsPage() {
           ) : (
             <SettingsItem
               icon={Shield}
-              label="Admin Login"
+              label="Login"
               description="Login as admin to manage content"
               action="link"
               href="/admin/login"

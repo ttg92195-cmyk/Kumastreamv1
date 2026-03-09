@@ -219,7 +219,7 @@ export function Sidebar() {
               </button>
             ) : (
               <MenuItem
-                item={{ name: 'Admin Login', href: '/admin/login', icon: Shield }}
+                item={{ name: 'Login', href: '/admin/login', icon: Shield }}
                 isActive={pathname === '/admin/login'}
                 themeColor={themeColor}
                 onClick={handleClose}

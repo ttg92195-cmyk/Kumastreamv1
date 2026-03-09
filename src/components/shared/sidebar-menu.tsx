@@ -26,7 +26,7 @@ const menuItems = [
   { name: 'Recent', href: '/recent', icon: Clock },
   { name: 'Downloads', href: '/downloads', icon: Download },
   { name: 'Settings', href: '/settings', icon: Settings },
-  { name: 'Admin Login', href: '/admin/login', icon: Shield },
+  { name: 'Login', href: '/admin/login', icon: Shield },
 ];
 
 export function SidebarMenu() {

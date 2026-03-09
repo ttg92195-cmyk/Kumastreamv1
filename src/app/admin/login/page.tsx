@@ -76,7 +76,7 @@ export default function AdminLoginPage() {
         <div className="w-20 h-20 bg-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
           <Shield className="w-10 h-10 text-white" />
         </div>
-        <h1 className="text-white text-2xl font-bold">Admin Login</h1>
+        <h1 className="text-white text-2xl font-bold">Login</h1>
         <p className="text-gray-500 text-sm mt-2">Login to manage content</p>
       </div>
 
