@@ -64,6 +64,27 @@ const COLLECTION_NAMES: Record<string, string> = {
   'sports documentaries': 'Sports Documentaries',
 };
 
+// Special universe collections that need multiple keyword searches
+// These franchises have movies that don't contain the main keyword in their title
+const UNIVERSE_KEYWORDS: Record<string, string[]> = {
+  'marvel': [
+    'Marvel', 'Iron Man', 'Thor', 'Captain America', 'Avengers', 
+    'Guardians of the Galaxy', 'Spider-Man', 'Spiderman', 'X-Men', 
+    'Deadpool', 'Ant-Man', 'Doctor Strange', 'Black Panther', 
+    'Captain Marvel', 'Black Widow', 'WandaVision', 'Loki', 
+    'Hawkeye', 'Moon Knight', 'Eternals', 'Shang-Chi', 'Venom',
+    'Wolverine', 'Hulk', 'Fantastic Four', 'Blade', 'Daredevil',
+    'Punisher', 'Ghost Rider'
+  ],
+  'dc': [
+    'DC', 'Batman', 'Superman', 'Wonder Woman', 'Aquaman', 
+    'Flash', 'Justice League', 'Joker', 'Suicide Squad', 
+    'Shazam', 'Green Lantern', 'Arrow', 'Supergirl', 'Black Adam',
+    'Constantine', 'Catwoman', 'Birds of Prey', 'Doom Patrol',
+    'Titans', 'Peacemaker', 'Blue Beetle', 'Man of Steel'
+  ],
+};
+
 export default function CollectionPage() {
   const params = useParams();
   const router = useRouter();
@@ -78,24 +99,74 @@ export default function CollectionPage() {
     const fetchCollection = async () => {
       setLoading(true);
       try {
-        // Fetch movies with keyword in title
-        const moviesRes = await fetch(`/api/movies?search=${encodeURIComponent(keyword)}&limit=9999`);
-        if (moviesRes.ok) {
-          const data = await moviesRes.json();
-          setMovies(data.movies.map((m: Movie) => ({
-            ...m,
-            poster: m.poster || PLACEHOLDER_POSTER,
-          })));
-        }
+        // Check if this is a special universe collection
+        const universeKeywords = UNIVERSE_KEYWORDS[keyword];
+        
+        if (universeKeywords) {
+          // Fetch movies for all related keywords and combine
+          const allMovies: Movie[] = [];
+          const allSeries: Series[] = [];
+          const movieIds = new Set<string>();
+          const seriesIds = new Set<string>();
+          
+          // Fetch for each keyword in the universe
+          for (const searchKeyword of universeKeywords) {
+            // Fetch movies
+            const moviesRes = await fetch(`/api/movies?search=${encodeURIComponent(searchKeyword)}&limit=9999`);
+            if (moviesRes.ok) {
+              const data = await moviesRes.json();
+              for (const m of data.movies) {
+                if (!movieIds.has(m.id)) {
+                  movieIds.add(m.id);
+                  allMovies.push({
+                    ...m,
+                    poster: m.poster || PLACEHOLDER_POSTER,
+                  });
+                }
+              }
+            }
+            
+            // Fetch series
+            const seriesRes = await fetch(`/api/series?search=${encodeURIComponent(searchKeyword)}&limit=9999`);
+            if (seriesRes.ok) {
+              const data = await seriesRes.json();
+              for (const s of data.series) {
+                if (!seriesIds.has(s.id)) {
+                  seriesIds.add(s.id);
+                  allSeries.push({
+                    ...s,
+                    poster: s.poster || PLACEHOLDER_POSTER,
+                  });
+                }
+              }
+            }
+          }
+          
+          // Sort by year descending
+          allMovies.sort((a, b) => b.year - a.year);
+          allSeries.sort((a, b) => b.year - a.year);
+          
+          setMovies(allMovies);
+          setSeries(allSeries);
+        } else {
+          // Standard single keyword search
+          const moviesRes = await fetch(`/api/movies?search=${encodeURIComponent(keyword)}&limit=9999`);
+          if (moviesRes.ok) {
+            const data = await moviesRes.json();
+            setMovies(data.movies.map((m: Movie) => ({
+              ...m,
+              poster: m.poster || PLACEHOLDER_POSTER,
+            })));
+          }
 
-        // Fetch series with keyword in title
-        const seriesRes = await fetch(`/api/series?search=${encodeURIComponent(keyword)}&limit=9999`);
-        if (seriesRes.ok) {
-          const data = await seriesRes.json();
-          setSeries(data.series.map((s: Series) => ({
-            ...s,
-            poster: s.poster || PLACEHOLDER_POSTER,
-          })));
+          const seriesRes = await fetch(`/api/series?search=${encodeURIComponent(keyword)}&limit=9999`);
+          if (seriesRes.ok) {
+            const data = await seriesRes.json();
+            setSeries(data.series.map((s: Series) => ({
+              ...s,
+              poster: s.poster || PLACEHOLDER_POSTER,
+            })));
+          }
         }
       } catch (error) {
         console.error('Error fetching collection:', error);

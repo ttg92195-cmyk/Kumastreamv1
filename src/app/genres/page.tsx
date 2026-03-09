@@ -36,6 +36,9 @@ const AUTO_COLLECTIONS = [
   'Studio Ghibli', 'Tom & Jerry', 'Detective Chinatown'
 ];
 
+// Universe collections that search multiple related keywords
+const UNIVERSE_COLLECTIONS = ['Marvel', 'DC'];
+
 // Additional Collections (from database collection field)
 const DB_COLLECTIONS = [
   '007', 'A24 movies', 'CHRISTMAS MOVIES', 'Dragon Gate Posthouse',
@@ -414,17 +417,31 @@ function GenresContent() {
                   <FolderOpen className="w-4 h-4" style={{ color: themeColor }} />
                   <h2 className="text-white font-semibold">Auto Collections</h2>
                 </div>
-                <p className="text-gray-400 text-xs mb-3">Automatically finds movies/series with this keyword in title</p>
+                <p className="text-gray-400 text-xs mb-3">
+                  Click to view all related movies/series. 
+                  <span className="text-orange-400"> Marvel & DC </span> 
+                  show ALL universe content (Iron Man, Avengers, Batman, etc.)
+                </p>
                 <div className="grid grid-cols-2 gap-2">
-                  {AUTO_COLLECTIONS.map((c) => (
-                    <Link
-                      key={c}
-                      href={`/collection/${encodeURIComponent(c)}`}
-                      className="px-3 py-3 bg-purple-500/20 border border-purple-500/50 text-purple-400 rounded-lg text-sm font-medium hover:bg-purple-500/30 hover:border-purple-400 transition-all text-left"
-                    >
-                      {c}
-                    </Link>
-                  ))}
+                  {AUTO_COLLECTIONS.map((c) => {
+                    const isUniverse = UNIVERSE_COLLECTIONS.includes(c);
+                    return (
+                      <Link
+                        key={c}
+                        href={`/collection/${encodeURIComponent(c)}`}
+                        className={`px-3 py-3 rounded-lg text-sm font-medium transition-all text-left flex items-center justify-between ${
+                          isUniverse 
+                            ? 'bg-orange-500/20 border border-orange-500/50 text-orange-400 hover:bg-orange-500/30 hover:border-orange-400' 
+                            : 'bg-purple-500/20 border border-purple-500/50 text-purple-400 hover:bg-purple-500/30 hover:border-purple-400'
+                        }`}
+                      >
+                        <span>{c}</span>
+                        {isUniverse && (
+                          <span className="text-[10px] bg-orange-500/30 px-1.5 py-0.5 rounded">UNIVERSE</span>
+                        )}
+                      </Link>
+                    );
+                  })}
                 </div>
               </section>
 
