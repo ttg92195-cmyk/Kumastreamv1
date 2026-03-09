@@ -68,6 +68,11 @@ const COLLECTION_NAMES: Record<string, string> = {
   'pirates of the caribbean': 'Pirates of the Caribbean',
   'monsterverse': 'MonsterVerse',
   'despicable me': 'Despicable Me / Minions',
+  'academy award winners': 'Academy Award Winners',
+  'imdb top 250': 'IMDb Top 250',
+  'live-action anime': 'Live-Action Anime',
+  'nostalgic 90s': 'Nostalgic 90s',
+  'based on true stories': 'Based on True Stories',
 };
 
 // Special universe collections that need multiple keyword searches
