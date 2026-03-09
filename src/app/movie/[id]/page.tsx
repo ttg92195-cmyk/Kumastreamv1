@@ -281,7 +281,7 @@ export default function MovieDetailPage() {
             {/* Description */}
             <div>
               <h3 className="text-white font-semibold mb-2">Overview</h3>
-              <p className={cn('text-gray-300 text-sm leading-relaxed', !viewMore && 'line-clamp-4')}>
+              <p className={cn('text-gray-300 text-sm leading-relaxed whitespace-pre-line', !viewMore && 'line-clamp-4')}>
                 {movie.description || 'No description available.'}
               </p>
               <button

@@ -289,7 +289,7 @@ export default function SeriesDetailPage() {
           <div className="space-y-6">
             <div>
               <h3 className="text-white font-semibold mb-2">Overview</h3>
-              <p className={cn('text-gray-300 text-sm leading-relaxed', !viewMore && 'line-clamp-4')}>
+              <p className={cn('text-gray-300 text-sm leading-relaxed whitespace-pre-line', !viewMore && 'line-clamp-4')}>
                 {series.description || 'No description available.'}
               </p>
               <button
