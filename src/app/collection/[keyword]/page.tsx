@@ -62,6 +62,12 @@ const COLLECTION_NAMES: Record<string, string> = {
   'sit-com': 'Sit-com Series',
   'sitcom': 'Sit-com Series',
   'sports documentaries': 'Sports Documentaries',
+  // New Auto Collections
+  'the conjuring universe': 'The Conjuring Universe',
+  'jurassic': 'Jurassic Park / World',
+  'pirates of the caribbean': 'Pirates of the Caribbean',
+  'monsterverse': 'MonsterVerse',
+  'despicable me': 'Despicable Me / Minions',
 };
 
 // Special universe collections that need multiple keyword searches
@@ -82,6 +88,18 @@ const UNIVERSE_KEYWORDS: Record<string, string[]> = {
     'Shazam', 'Green Lantern', 'Arrow', 'Supergirl', 'Black Adam',
     'Constantine', 'Catwoman', 'Birds of Prey', 'Doom Patrol',
     'Titans', 'Peacemaker', 'Blue Beetle', 'Man of Steel'
+  ],
+  'the conjuring universe': [
+    'Conjuring', 'Annabelle', 'Nun', 'La Llorona', 'Crooked Man'
+  ],
+  'jurassic': [
+    'Jurassic Park', 'Jurassic World', 'Jurassic'
+  ],
+  'monsterverse': [
+    'Godzilla', 'King Kong', 'Kong', 'Skull Island', 'Monarch'
+  ],
+  'despicable me': [
+    'Despicable Me', 'Minions'
   ],
 };
 

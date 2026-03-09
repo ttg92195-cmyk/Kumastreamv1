@@ -33,17 +33,21 @@ const AUTO_COLLECTIONS = [
   'James Bond', 'Fast & Furious', 'John Wick', 'Mission Impossible',
   'Transformers', 'X-Men', 'Spider-Man', 'Batman',
   'American Pie', 'Final Destination', 'Saw', 'Scooby-Doo',
-  'Studio Ghibli', 'Tom & Jerry', 'Detective Chinatown'
+  'Studio Ghibli', 'Tom & Jerry', 'Detective Chinatown',
+  'The Conjuring Universe', 'Jurassic', 'Pirates of the Caribbean',
+  'MonsterVerse', 'Despicable Me'
 ];
 
 // Universe collections that search multiple related keywords
-const UNIVERSE_COLLECTIONS = ['Marvel', 'DC'];
+const UNIVERSE_COLLECTIONS = ['Marvel', 'DC', 'The Conjuring Universe', 'Jurassic', 'MonsterVerse', 'Despicable Me'];
 
 // Additional Collections (from database collection field)
 const DB_COLLECTIONS = [
   '007', 'A24 movies', 'CHRISTMAS MOVIES', 'Dragon Gate Posthouse',
   'Ocean\'s Collection', 'Queen Of Kung Fu', 'Thai GDH',
-  'Sit-com', 'Sports Documentaries', 'Lord of the Rings'
+  'Sit-com', 'Sports Documentaries', 'Lord of the Rings',
+  'Academy Award Winners', 'IMDb Top 250', 'Live-Action Anime',
+  'Nostalgic 90s', 'Based on True Stories'
 ];
 
 interface Content {
