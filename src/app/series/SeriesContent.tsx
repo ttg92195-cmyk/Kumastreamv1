@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { MovieCard } from '@/components/movie/MovieCard';
 import { ChevronLeft, ChevronRight, X, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -22,16 +22,18 @@ const ITEMS_PER_PAGE = 20;
 export default function SeriesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const pathname = usePathname();
   const { themeColor } = useSettingsStore();
   
   const [series, setSeries] = useState<Series[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
+  // Get page from URL, default to 1
+  const currentPage = parseInt(searchParams.get('page') || '1', 10);
   const genreFilter = searchParams.get('genre');
   const tagFilter = searchParams.get('tag');
   const activeFilter = genreFilter || tagFilter;
@@ -80,11 +82,13 @@ export default function SeriesContent() {
     };
   }, [searchQuery, fetchSeries]);
 
+  // Navigate to page by updating URL
   const goToPage = useCallback((page: number) => {
-    setIsTransitioning(true);
-    setCurrentPage(page);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', page.toString());
+    router.push(`${pathname}?${params.toString()}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+  }, [router, pathname, searchParams]);
 
   const clearFilter = useCallback(() => {
     router.push('/series');
@@ -159,6 +163,7 @@ export default function SeriesContent() {
         {!loading && totalCount > 0 && (
           <div className="text-gray-400 text-sm mb-4">
             Showing {series.length} of {totalCount} series
+            {totalPages > 1 && <span className="ml-2">• Page {currentPage} of {totalPages}</span>}
           </div>
         )}
 
