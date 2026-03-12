@@ -7,8 +7,8 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DATABASE_URL") // Use same URL for direct connection (works with Neon serverless)
+  url       = env("NEW_DB_URL_DATABASE_URL")
+  directUrl = env("NEW_DB_URL_DATABASE_URL") // Use same URL for direct connection (works with Neon serverless)
 }
 
 model User {

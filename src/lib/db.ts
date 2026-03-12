@@ -9,7 +9,7 @@ function createPrismaClient() {
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
     datasources: {
       db: {
-        url: process.env.DATABASE_URL,
+        url: process.env.NEW_DB_URL_DATABASE_URL,
       },
     },
   })
