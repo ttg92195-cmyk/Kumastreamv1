@@ -569,7 +569,8 @@ img {
 
 /* Movie info header - parent container optimization */
 .movie-info-header {
-  contain: layout style;
+  contain: strict;
+  transform: translateZ(0);
 }
 
 /* Series meta row - INP optimized */
@@ -595,7 +596,8 @@ img {
 
 /* Series info header - parent container optimization */
 .series-info-header {
-  contain: layout style;
+  contain: strict;
+  transform: translateZ(0);
 }
 
 /* Backdrop container - INP optimized */
