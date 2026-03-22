@@ -203,7 +203,7 @@ export default function SeriesDetailPage() {
   if (error || !series) return <div className="min-h-screen bg-[#0f0f0f] flex flex-col items-center justify-center p-4"><p className="text-gray-500 mb-4">{error || 'Not found'}</p><button onClick={() => router.push('/')} className="px-4 py-2 text-white rounded-lg text-sm bg-theme">Go Home</button></div>;
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] pb-20">
+    <div className="page-container min-h-screen bg-[#0f0f0f] pb-20">
       <div className="backdrop-container relative w-full h-[280px] bg-[#1a1a1a]">
         <Image src={series.backdrop || series.poster || PLACEHOLDER} alt={series.title} fill className="object-cover" sizes="100vw" priority loading="eager" />
         <div className="backdrop-overlay" />
@@ -213,7 +213,7 @@ export default function SeriesDetailPage() {
         </div>
       </div>
 
-      <div className="px-4 -mt-16 relative z-10">
+      <div className="movie-content-wrapper px-4 -mt-16 relative z-10">
         <div className="series-info-header flex items-end gap-4 mb-4">
           <div className="poster-container relative w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden shadow-xl border border-gray-700/30">
             <Image src={series.poster || PLACEHOLDER} alt={series.title} fill className="object-cover" sizes="96px 144px" loading="eager" />

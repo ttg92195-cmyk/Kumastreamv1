@@ -283,7 +283,7 @@ export default function MovieDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] pb-20">
+    <div className="page-container min-h-screen bg-[#0f0f0f] pb-20">
       {/* Backdrop - simplified for INP */}
       <div className="backdrop-container relative w-full h-[280px] bg-[#1a1a1a]">
         <Image src={backdropUrl} alt={movie.title} fill className="object-cover" sizes="100vw" priority loading="eager" />
@@ -295,7 +295,7 @@ export default function MovieDetailPage() {
       </div>
 
       {/* Movie Info */}
-      <div className="px-4 -mt-16 relative z-10">
+      <div className="movie-content-wrapper px-4 -mt-16 relative z-10">
         <div className="movie-info-header flex items-end gap-4 mb-4">
           <div className="poster-container relative w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden shadow-xl border border-gray-700/30">
             <Image src={posterUrl} alt={movie.title} fill className="object-cover" sizes="96px 144px" loading="eager" />
