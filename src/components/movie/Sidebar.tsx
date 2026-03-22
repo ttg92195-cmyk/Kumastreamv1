@@ -111,11 +111,12 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Backdrop with smooth fade */}
+      {/* Backdrop with smooth fade - optimized */}
       <div
         className={cn(
-          "fixed inset-0 z-40 bg-black/60",
-          "transition-all duration-300 ease-out",
+          "sidebar-backdrop fixed inset-0 z-40 bg-black/60",
+          "transition-opacity duration-300 ease-out",
+          "will-change-opacity",
           sidebarOpen
             ? "opacity-100 visible"
             : "opacity-0 invisible"

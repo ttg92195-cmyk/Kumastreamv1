@@ -643,6 +643,17 @@ img {
   contain: layout;
 }
 
+/* Sidebar backdrop - INP optimized */
+.sidebar-backdrop {
+  contain: strict;
+  pointer-events: auto;
+}
+
+/* Will change utilities */
+.will-change-opacity {
+  will-change: opacity;
+}
+
 /* Rating item with theme color */
 .movie-meta-rating {
   color: var(--theme-color);
