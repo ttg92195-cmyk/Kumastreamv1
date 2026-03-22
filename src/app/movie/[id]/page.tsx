@@ -288,9 +288,9 @@ export default function MovieDetailPage() {
       <div className="backdrop-container relative w-full h-[280px] bg-[#1a1a1a]">
         <Image src={backdropUrl} alt={movie.title} fill className="object-cover" sizes="100vw" priority loading="eager" />
         <div className="backdrop-overlay" />
-        <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
-          <button onClick={handleGoBack} className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 active:scale-95"><ArrowLeft className="w-5 h-5" /></button>
-          <button onClick={handleBookmark} className={cn('w-10 h-10 rounded-full flex items-center justify-center active:scale-95', bookmarked ? 'text-white' : 'bg-black/50 text-white')} style={bookmarked ? { backgroundColor: themeColor } : {}}><Heart className={cn('w-5 h-5', bookmarked && 'fill-current')} /></button>
+        <div className="backdrop-buttons absolute top-4 left-4 right-4 flex items-center justify-between">
+          <button onClick={handleGoBack} className="backdrop-btn w-10 h-10 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 active:scale-95"><ArrowLeft className="w-5 h-5" /></button>
+          <button onClick={handleBookmark} className={cn('backdrop-btn w-10 h-10 rounded-full flex items-center justify-center active:scale-95', bookmarked ? 'text-white' : 'bg-black/50 text-white')} style={bookmarked ? { backgroundColor: themeColor } : {}}><Heart className={cn('w-5 h-5', bookmarked && 'fill-current')} /></button>
         </div>
       </div>
 
@@ -314,8 +314,8 @@ export default function MovieDetailPage() {
         </div>
 
         {genreList.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {genreList.map((genre) => (<span key={genre} className="px-3 py-1 bg-gray-800 text-gray-300 text-xs rounded-full">{genre.trim()}</span>))}
+          <div className="genre-tags-container flex flex-wrap gap-2 mb-4">
+            {genreList.map((genre) => (<span key={genre} className="genre-tag px-3 py-1 bg-gray-800 text-gray-300 text-xs rounded-full">{genre.trim()}</span>))}
           </div>
         )}
 
@@ -333,14 +333,14 @@ export default function MovieDetailPage() {
 
       {/* Download Modal - Original Design */}
       {showDownloadModal && downloadLinksEnabled && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+        <div className="modal-wrapper fixed inset-0 z-50 flex items-end sm:items-center justify-center">
           {/* Backdrop - no blur for better INP */}
-          <div className="absolute inset-0 bg-black/80" onClick={handleCloseDownloadModal} />
+          <div className="modal-backdrop absolute inset-0 bg-black/80" onClick={handleCloseDownloadModal} />
           
           {/* Modal Content */}
-          <div className="relative w-full max-w-lg bg-[#0f0f0f] rounded-t-2xl sm:rounded-2xl overflow-hidden flex flex-col max-h-[90vh] sm:max-h-[85vh]" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content relative w-full max-w-lg bg-[#0f0f0f] rounded-t-2xl sm:rounded-2xl overflow-hidden flex flex-col max-h-[90vh] sm:max-h-[85vh]" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-800 sticky top-0 bg-[#0f0f0f] z-10">
+            <div className="modal-header flex items-center justify-between p-4 border-b border-gray-800 sticky top-0 bg-[#0f0f0f] z-10">
               <h2 className="text-white font-bold text-lg">Download Options</h2>
               <button onClick={handleCloseDownloadModal} className="p-2 rounded-full bg-gray-800 text-gray-400 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
             </div>

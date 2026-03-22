@@ -669,6 +669,48 @@ img {
   contain: strict;
 }
 
+/* Backdrop buttons container - optimized */
+.backdrop-buttons {
+  contain: layout;
+}
+
+/* Backdrop button - optimized */
+.backdrop-btn {
+  contain: layout;
+}
+
+/* Genre tags container - optimized */
+.genre-tags-container {
+  contain: layout style;
+}
+
+/* Genre tag - optimized */
+.genre-tag {
+  contain: layout;
+}
+
+/* Modal wrapper - optimized */
+.modal-wrapper {
+  contain: strict;
+}
+
+/* Modal backdrop - optimized */
+.modal-backdrop {
+  contain: strict;
+  pointer-events: auto;
+}
+
+/* Modal content - optimized */
+.modal-content {
+  contain: content;
+  transform: translateZ(0);
+}
+
+/* Modal header - optimized */
+.modal-header {
+  contain: layout;
+}
+
 /* Rating item with theme color */
 .movie-meta-rating {
   color: var(--theme-color);

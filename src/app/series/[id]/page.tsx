@@ -207,9 +207,9 @@ export default function SeriesDetailPage() {
       <div className="backdrop-container relative w-full h-[280px] bg-[#1a1a1a]">
         <Image src={series.backdrop || series.poster || PLACEHOLDER} alt={series.title} fill className="object-cover" sizes="100vw" priority loading="eager" />
         <div className="backdrop-overlay" />
-        <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
-          <button onClick={handleBack} className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70"><ArrowLeft className="w-5 h-5" /></button>
-          <button onClick={handleBookmark} className={cn('w-10 h-10 rounded-full flex items-center justify-center', isBookmarked ? 'text-white bg-theme' : 'bg-black/50 text-white')}><Heart className={cn('w-5 h-5', isBookmarked && 'fill-current')} /></button>
+        <div className="backdrop-buttons absolute top-4 left-4 right-4 flex items-center justify-between">
+          <button onClick={handleBack} className="backdrop-btn w-10 h-10 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70"><ArrowLeft className="w-5 h-5" /></button>
+          <button onClick={handleBookmark} className={cn('backdrop-btn w-10 h-10 rounded-full flex items-center justify-center', isBookmarked ? 'text-white bg-theme' : 'bg-black/50 text-white')}><Heart className={cn('w-5 h-5', isBookmarked && 'fill-current')} /></button>
         </div>
       </div>
 
