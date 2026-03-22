@@ -1,0 +1,553 @@
+@import "tailwindcss";
+
+:root {
+  /* Theme Colors */
+  --theme-color: #ef4444;
+  --theme-color-hover: #dc2626;
+  --theme-color-light: rgba(239, 68, 68, 0.1);
+  --theme-color-medium: rgba(239, 68, 68, 0.2);
+  --theme-color-dark: rgba(239, 68, 68, 0.3);
+
+  /* Background Colors */
+  --background: #0f0f0f;
+  --background-light: #1a1a1a;
+  --background-lighter: #222222;
+  --foreground: #ffffff;
+
+  /* Card & Border */
+  --card: #1a1a1a;
+  --card-hover: #222222;
+  --border: #2a2a2a;
+  --border-light: #3a3a3a;
+
+  /* Input */
+  --input: #1f1f1f;
+
+  /* Overlay */
+  --overlay-light: rgba(0, 0, 0, 0.5);
+  --overlay-medium: rgba(0, 0, 0, 0.7);
+  --overlay-dark: rgba(0, 0, 0, 0.85);
+
+  /* Transition */
+  --transition-fast: 150ms;
+  --transition-normal: 200ms;
+  --transition-slow: 300ms;
+  --easing-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --easing-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+* {
+  border-color: var(--border);
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Fix autofill background color for dark theme */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #1a1a1a inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+input:-moz-autofill,
+input:-moz-autofill-preview {
+  filter: none;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3a3a3a;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4a4a4a;
+}
+
+/* Hide scrollbar utility */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Safe area for mobile */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* ================================
+   THEME COLOR UTILITIES
+   ================================ */
+
+/* Text Colors */
+.text-theme {
+  color: var(--theme-color);
+}
+
+.text-theme-hover:hover {
+  color: var(--theme-color-hover);
+}
+
+/* SVG Fill */
+.fill-theme {
+  fill: var(--theme-color);
+}
+
+/* Background Colors */
+.bg-theme {
+  background-color: var(--theme-color);
+}
+
+.bg-theme-light {
+  background-color: var(--theme-color-light);
+}
+
+.bg-theme-medium {
+  background-color: var(--theme-color-medium);
+}
+
+.bg-theme-dark {
+  background-color: var(--theme-color-dark);
+}
+
+/* Background with opacity using color-mix (works with dynamic CSS variable) */
+.bg-theme-10 {
+  background-color: color-mix(in srgb, var(--theme-color) 10%, transparent);
+}
+
+.bg-theme-15 {
+  background-color: color-mix(in srgb, var(--theme-color) 15%, transparent);
+}
+
+.bg-theme-20 {
+  background-color: color-mix(in srgb, var(--theme-color) 20%, transparent);
+}
+
+.bg-theme-25 {
+  background-color: color-mix(in srgb, var(--theme-color) 25%, transparent);
+}
+
+.bg-theme-30 {
+  background-color: color-mix(in srgb, var(--theme-color) 30%, transparent);
+}
+
+.bg-theme-50 {
+  background-color: color-mix(in srgb, var(--theme-color) 50%, transparent);
+}
+
+.bg-theme-80 {
+  background-color: color-mix(in srgb, var(--theme-color) 80%, transparent);
+}
+
+/* Hover Background */
+.bg-theme-hover:hover {
+  background-color: var(--theme-color-hover);
+}
+
+/* Border Colors */
+.border-theme {
+  border-color: var(--theme-color);
+}
+
+.border-theme-light {
+  border-color: var(--theme-color-medium);
+}
+
+.border-theme-30 {
+  border-color: color-mix(in srgb, var(--theme-color) 30%, transparent);
+}
+
+.border-theme-50 {
+  border-color: color-mix(in srgb, var(--theme-color) 50%, transparent);
+}
+
+/* Border Bottom */
+.border-b-theme {
+  border-bottom-color: var(--theme-color);
+}
+
+/* Touch optimization - prevent 300ms delay and context menu issues */
+button, a, [role="button"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ================================
+   OVERLAY STYLES
+   ================================ */
+
+.overlay-light {
+  background-color: var(--overlay-light);
+}
+
+.overlay-medium {
+  background-color: var(--overlay-medium);
+}
+
+.overlay-dark {
+  background-color: var(--overlay-dark);
+}
+
+/* Theme-tinted overlay */
+.overlay-theme {
+  background-color: rgba(239, 68, 68, 0.15);
+}
+
+/* ================================
+   TRANSITION & ANIMATION
+   ================================ */
+
+/* Transition Durations */
+.transition-fast {
+  transition-duration: var(--transition-fast);
+}
+
+.transition-normal {
+  transition-duration: var(--transition-normal);
+}
+
+.transition-slow {
+  transition-duration: var(--transition-slow);
+}
+
+/* Easing */
+.ease-smooth {
+  transition-timing-function: var(--easing-smooth);
+}
+
+.ease-bounce {
+  transition-timing-function: var(--easing-bounce);
+}
+
+/* Content fade in animation - smooth and instant feel */
+@keyframes contentFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-content-in {
+  animation: contentFadeIn 0.2s ease-out forwards;
+}
+
+/* Simple fade in - no transform for smoother feel */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+/* Smooth page enter - no transform, just opacity */
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-page-enter {
+  animation: pageEnter 0.2s ease-out forwards;
+}
+
+/* Smooth content fade in - for page transitions */
+@keyframes contentEnter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-content-enter {
+  animation: contentEnter 0.2s ease-out forwards;
+}
+
+/* Smooth fade in for loading states - instant feel */
+@keyframes smoothFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-smooth-in {
+  animation: smoothFadeIn 0.2s ease-out forwards;
+  opacity: 0;
+}
+
+/* Staggered animation for lists - opacity only, no transform */
+@keyframes staggerFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-stagger > * {
+  animation: staggerFadeIn 0.2s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.animate-stagger > *:nth-child(2) { animation-delay: 30ms; }
+.animate-stagger > *:nth-child(3) { animation-delay: 60ms; }
+.animate-stagger > *:nth-child(4) { animation-delay: 90ms; }
+.animate-stagger > *:nth-child(5) { animation-delay: 120ms; }
+.animate-stagger > *:nth-child(6) { animation-delay: 150ms; }
+.animate-stagger > *:nth-child(7) { animation-delay: 180ms; }
+.animate-stagger > *:nth-child(8) { animation-delay: 210ms; }
+.animate-stagger > *:nth-child(9) { animation-delay: 240ms; }
+.animate-stagger > *:nth-child(10) { animation-delay: 270ms; }
+
+/* Pulse Animation - smoother */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Skeleton shimmer - fast and smooth */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--card) 25%,
+    var(--card-hover) 50%,
+    var(--card) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1s infinite;
+}
+
+/* Skeleton pulse for loading states */
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.skeleton-pulse {
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+/* Scale on hover */
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out forwards;
+}
+
+/* Theme Pulse Animation */
+@keyframes themePulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 var(--theme-color-medium);
+  }
+  50% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+}
+
+.animate-theme-pulse {
+  animation: themePulse 2s ease-in-out infinite;
+}
+
+/* ================================
+   INTERACTIVE STATES
+   ================================ */
+
+/* Focus Ring with Theme Color */
+.focus-theme:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--theme-color);
+}
+
+.focus-theme-visible:focus-visible {
+  outline: 2px solid var(--theme-color);
+  outline-offset: 2px;
+}
+
+/* Active State */
+.active-theme:active {
+  transform: scale(0.98);
+  background-color: var(--theme-color-hover);
+}
+
+/* Selection */
+::selection {
+  background-color: var(--theme-color);
+  color: white;
+}
+
+/* ================================
+   BUTTON STYLES
+   ================================ */
+
+.btn-theme {
+  background-color: var(--theme-color);
+  color: white;
+  transition: all var(--transition-normal) var(--easing-smooth);
+}
+
+.btn-theme:hover {
+  background-color: var(--theme-color-hover);
+  transform: translateY(-1px);
+}
+
+.btn-theme:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn-theme-outline {
+  background-color: transparent;
+  color: var(--theme-color);
+  border: 2px solid var(--theme-color);
+  transition: all var(--transition-normal) var(--easing-smooth);
+}
+
+.btn-theme-outline:hover {
+  background-color: var(--theme-color);
+  color: white;
+}
+
+/* ================================
+   CARD STYLES
+   ================================ */
+
+.card-theme {
+  border-left: 3px solid var(--theme-color);
+}
+
+.card-theme-hover:hover {
+  border-left-color: var(--theme-color-hover);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+}
+
+/* ================================
+   PROGRESS & LOADERS
+   ================================ */
+
+.progress-theme {
+  background: linear-gradient(
+    90deg,
+    var(--theme-color) 0%,
+    var(--theme-color-hover) 50%,
+    var(--theme-color) 100%
+  );
+}
+
+/* Glow Effect */
+.glow-theme {
+  box-shadow: 0 0 20px var(--theme-color-medium);
+}
+
+/* ================================
+   RESPONSIVE UTILITIES
+   ================================ */
+
+/* Touch-friendly tap targets */
+@media (hover: none) {
+  .tap-highlight {
+    -webkit-tap-highlight-color: var(--theme-color-light);
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ================================
+   PERFORMANCE OPTIMIZATIONS
+   ================================ */
+
+/* GPU acceleration for animations */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+/* Smooth scrolling on touch devices */
+.smooth-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Image loading optimization */
+img {
+  content-visibility: auto;
+}
+
+/* Contain paint for better performance */
+.contain-paint {
+  contain: paint;
+}
+
+/* Backdrop blur fallback */
+@supports not (backdrop-filter: blur(12px)) {
+  .backdrop-blur-sm {
+    background-color: rgba(0, 0, 0, 0.85);
+  }
+}
