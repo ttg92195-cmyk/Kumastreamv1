@@ -711,6 +711,41 @@ img {
   contain: layout;
 }
 
+/* Tab content container - optimized */
+.tab-content-container {
+  contain: layout style;
+}
+
+/* Download button - optimized */
+.download-btn {
+  contain: layout;
+}
+
+/* Detail section - optimized */
+.detail-section {
+  contain: layout;
+}
+
+/* Detail info rows - optimized */
+.detail-info-rows {
+  contain: layout style;
+}
+
+/* Detail info row - optimized */
+.detail-info-row {
+  contain: layout;
+}
+
+/* Detail tags - optimized */
+.detail-tags {
+  contain: layout;
+}
+
+/* Casts section - optimized */
+.casts-section {
+  contain: layout style;
+}
+
 /* Rating item with theme color */
 .movie-meta-rating {
   color: var(--theme-color);

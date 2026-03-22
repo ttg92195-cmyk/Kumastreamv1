@@ -211,8 +211,8 @@ export default function MovieDetailPage() {
     switch (activeTab) {
       case 'detail':
         return (
-          <div className="space-y-6">
-            <div>
+          <div className="tab-content-container space-y-6">
+            <div className="detail-section">
               <h3 className="text-white font-semibold mb-2">Overview</h3>
               <p className={cn('text-gray-300 text-sm leading-relaxed whitespace-pre-line', !viewMore && 'line-clamp-4')}>{movie.description || 'No description available.'}</p>
               <button onClick={handleViewMoreToggle} className="text-sm mt-2 flex items-center gap-1 text-theme">
@@ -220,21 +220,21 @@ export default function MovieDetailPage() {
                 <ChevronDown className={cn('w-4 h-4 transition-transform', viewMore && 'rotate-180')} />
               </button>
             </div>
-            <div className="space-y-2">
-              {movie.fileSize && (<div className="flex items-start gap-2"><span className="text-gray-500 text-sm min-w-[100px]">File Size</span><span className="text-white text-sm">{movie.fileSize}</span></div>)}
-              {movie.quality && (<div className="flex items-start gap-2"><span className="text-gray-500 text-sm min-w-[100px]">Quality</span><span className="text-white text-sm">{movie.quality}</span></div>)}
-              {movie.format && (<div className="flex items-start gap-2"><span className="text-gray-500 text-sm min-w-[100px]">Format</span><span className="text-white text-sm">{movie.format}</span></div>)}
-              {movie.genres && (<div className="flex items-start gap-2"><span className="text-gray-500 text-sm min-w-[100px]">Genre</span><span className="text-white text-sm">{movie.genres}</span></div>)}
-              <div className="flex items-start gap-2"><span className="text-gray-500 text-sm min-w-[100px]">Duration</span><span className="text-white text-sm">{String(Math.floor(movie.duration / 60)).padStart(2, '0')}:{String(movie.duration % 60).padStart(2, '0')}:00</span></div>
-              {movie.subtitle && (<div className="flex items-start gap-2"><span className="text-gray-500 text-sm min-w-[100px]">Subtitle</span><span className="text-white text-sm">{movie.subtitle}</span></div>)}
-              {movie.director && (<div className="flex items-start gap-2"><span className="text-gray-500 text-sm min-w-[100px]">Director</span><span className="text-white text-sm">{movie.director}</span></div>)}
+            <div className="detail-info-rows space-y-2">
+              {movie.fileSize && (<div className="detail-info-row flex items-start gap-2"><span className="text-gray-500 text-sm min-w-[100px]">File Size</span><span className="text-white text-sm">{movie.fileSize}</span></div>)}
+              {movie.quality && (<div className="detail-info-row flex items-start gap-2"><span className="text-gray-500 text-sm min-w-[100px]">Quality</span><span className="text-white text-sm">{movie.quality}</span></div>)}
+              {movie.format && (<div className="detail-info-row flex items-start gap-2"><span className="text-gray-500 text-sm min-w-[100px]">Format</span><span className="text-white text-sm">{movie.format}</span></div>)}
+              {movie.genres && (<div className="detail-info-row flex items-start gap-2"><span className="text-gray-500 text-sm min-w-[100px]">Genre</span><span className="text-white text-sm">{movie.genres}</span></div>)}
+              <div className="detail-info-row flex items-start gap-2"><span className="text-gray-500 text-sm min-w-[100px]">Duration</span><span className="text-white text-sm">{String(Math.floor(movie.duration / 60)).padStart(2, '0')}:{String(movie.duration % 60).padStart(2, '0')}:00</span></div>
+              {movie.subtitle && (<div className="detail-info-row flex items-start gap-2"><span className="text-gray-500 text-sm min-w-[100px]">Subtitle</span><span className="text-white text-sm">{movie.subtitle}</span></div>)}
+              {movie.director && (<div className="detail-info-row flex items-start gap-2"><span className="text-gray-500 text-sm min-w-[100px]">Director</span><span className="text-white text-sm">{movie.director}</span></div>)}
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="detail-tags flex flex-wrap gap-2">
               {movie.quality4k && <span className="px-2 py-1 text-xs rounded bg-theme/30 text-theme">4K</span>}
               {genreList.map((genre) => (<span key={genre} className="px-2 py-1 bg-gray-800 text-gray-300 text-xs rounded">{genre.trim()}</span>))}
             </div>
             {movie.casts && movie.casts.length > 0 && (
-              <div>
+              <div className="casts-section">
                 <h3 className="text-white font-semibold mb-3">Casts</h3>
                 <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-2">
                   {movie.casts.map((cast) => (<CastCard key={cast.id} name={cast.name} role={cast.role} photo={cast.photo || undefined} />))}
@@ -246,7 +246,7 @@ export default function MovieDetailPage() {
       case 'download':
         if (!downloadLinksEnabled) {
           return (
-            <div className="space-y-4">
+            <div className="tab-content-container space-y-4">
               <h3 className="text-white font-semibold">Download Options</h3>
               <div className="text-center py-10 bg-gray-800/50 rounded-lg border border-gray-700">
                 <Lock className="w-12 h-12 mx-auto mb-3 text-theme" />
@@ -258,9 +258,9 @@ export default function MovieDetailPage() {
           );
         }
         return (
-          <div className="space-y-4">
+          <div className="tab-content-container space-y-4">
             <h3 className="text-white font-semibold">Download Options</h3>
-            <button onClick={handleOpenDownloadModal} className="w-full py-4 bg-gray-800/50 rounded-lg border border-gray-700 flex items-center justify-center gap-3 hover:bg-gray-800 transition-colors">
+            <button onClick={handleOpenDownloadModal} className="download-btn w-full py-4 bg-gray-800/50 rounded-lg border border-gray-700 flex items-center justify-center gap-3 hover:bg-gray-800 transition-colors">
               <Download className="w-5 h-5 text-theme" />
               <span className="text-white font-medium">View Download Links</span>
               <span className="text-gray-400 text-sm">({serverGroups.length > 0 ? serverGroups.length : defaultServers.length} servers)</span>
@@ -269,7 +269,7 @@ export default function MovieDetailPage() {
         );
       case 'explore':
         return (
-          <div>
+          <div className="tab-content-container">
             <h3 className="text-white font-semibold mb-4">You may also like</h3>
             <div className="grid grid-cols-3 gap-3">
               {similarMovies.map((m) => (<MovieCard key={m.id} id={m.id} title={m.title} year={m.year} rating={m.rating} poster={m.poster || PLACEHOLDER_POSTER} quality4k={m.quality4k} quality={m.quality} type="movie" />))}
