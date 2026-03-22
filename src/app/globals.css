@@ -569,7 +569,7 @@ img {
 
 /* Movie info header - parent container optimization */
 .movie-info-header {
-  contain: strict;
+  contain: content;
   transform: translateZ(0);
 }
 
@@ -596,13 +596,13 @@ img {
 
 /* Series info header - parent container optimization */
 .series-info-header {
-  contain: strict;
+  contain: content;
   transform: translateZ(0);
 }
 
 /* Backdrop container - INP optimized */
 .backdrop-container {
-  contain: strict;
+  contain: content;
   isolation: isolate;
   transform: translateZ(0);
 }
@@ -612,7 +612,7 @@ img {
   position: absolute;
   inset: 0;
   background: linear-gradient(to top, #0f0f0f 0%, rgba(15, 15, 15, 0.6) 50%, transparent 100%);
-  contain: strict;
+  contain: content;
   pointer-events: none;
 }
 
