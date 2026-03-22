@@ -572,6 +572,32 @@ img {
   contain: layout style;
 }
 
+/* Series meta row - INP optimized */
+.series-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: #9ca3af;
+  contain: layout style;
+}
+
+.series-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  contain: layout;
+}
+
+.series-meta-rating {
+  color: var(--theme-color);
+}
+
+/* Series info header - parent container optimization */
+.series-info-header {
+  contain: layout style;
+}
+
 /* Rating item with theme color */
 .movie-meta-rating {
   color: var(--theme-color);

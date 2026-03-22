@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo, useCallback, memo, startTransition } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ArrowLeft, Heart, Star, Calendar, Clock, ChevronDown, Download, Lock, Server, ExternalLink, ChevronRight, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Heart, ChevronDown, Download, Lock, Server, ChevronRight, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CastCard } from '@/components/movie/CastCard';
 import { MovieCard } from '@/components/movie/MovieCard';
@@ -43,10 +43,10 @@ const GenreTags = memo(({ genres }: { genres: string }) => {
 });
 
 const MetaInfo = memo(({ year, rating, seasons }: { year: number; rating: number; seasons: number }) => (
-  <div className="flex items-center gap-4 text-sm text-gray-400">
-    <span className="flex items-center gap-1"><Calendar className="w-4 h-4" />{year}</span>
-    <span className="flex items-center gap-1"><Star className="w-4 h-4 fill-theme text-theme" />{rating.toFixed(1)}</span>
-    <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{seasons} Seasons</span>
+  <div className="series-meta-row">
+    <span className="series-meta-item">📅 {year}</span>
+    <span className="series-meta-item series-meta-rating">⭐ {rating.toFixed(1)}</span>
+    <span className="series-meta-item">⏱ {seasons} Seasons</span>
   </div>
 ));
 
@@ -214,7 +214,7 @@ export default function SeriesDetailPage() {
       </div>
 
       <div className="px-4 -mt-16 relative z-10">
-        <div className="flex items-end gap-4 mb-4">
+        <div className="series-info-header flex items-end gap-4 mb-4">
           <div className="relative w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden shadow-xl border border-gray-700/30">
             <Image src={series.poster || PLACEHOLDER} alt={series.title} fill className="object-cover" />
             {series.quality?.split('/')[0]?.trim() && <div className="absolute top-1 left-1 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full max-w-[60px] truncate">{series.quality.split('/')[0].trim()}</div>}
