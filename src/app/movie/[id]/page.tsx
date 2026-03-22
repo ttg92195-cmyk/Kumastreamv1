@@ -284,10 +284,10 @@ export default function MovieDetailPage() {
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] pb-20">
-      {/* Backdrop - optimized with containment */}
+      {/* Backdrop - simplified for INP */}
       <div className="backdrop-container relative w-full h-[280px] bg-[#1a1a1a]">
-        <Image src={backdropUrl} alt={movie.title} fill className="object-cover" sizes="100vw" priority />
-        <div className="backdrop-overlay absolute inset-0" />
+        <Image src={backdropUrl} alt={movie.title} fill className="object-cover" sizes="100vw" priority loading="eager" />
+        <div className="backdrop-overlay" />
         <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
           <button onClick={handleGoBack} className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 active:scale-95"><ArrowLeft className="w-5 h-5" /></button>
           <button onClick={handleBookmark} className={cn('w-10 h-10 rounded-full flex items-center justify-center active:scale-95', bookmarked ? 'text-white' : 'bg-black/50 text-white')} style={bookmarked ? { backgroundColor: themeColor } : {}}><Heart className={cn('w-5 h-5', bookmarked && 'fill-current')} /></button>
@@ -297,8 +297,8 @@ export default function MovieDetailPage() {
       {/* Movie Info */}
       <div className="px-4 -mt-16 relative z-10">
         <div className="movie-info-header flex items-end gap-4 mb-4">
-          <div className="relative w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden shadow-xl border border-gray-700/30">
-            <Image src={posterUrl} alt={movie.title} fill className="object-cover" />
+          <div className="poster-container relative w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden shadow-xl border border-gray-700/30">
+            <Image src={posterUrl} alt={movie.title} fill className="object-cover" sizes="96px 144px" loading="eager" />
             {movie.quality && movie.quality.split('/')[0].trim() && (<div className="absolute top-1 left-1 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full max-w-[60px] truncate">{movie.quality.split('/')[0].trim()}</div>)}
             {!movie.quality && movie.quality4k && (<div className="absolute top-1 left-1 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: themeColor }}>4K</div>)}
           </div>

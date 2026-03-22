@@ -600,14 +600,24 @@ img {
 
 /* Backdrop container - INP optimized */
 .backdrop-container {
-  contain: layout style;
+  contain: strict;
   isolation: isolate;
+  transform: translateZ(0);
 }
 
-/* Backdrop overlay - solid color instead of gradient for faster render */
+/* Backdrop overlay - simple solid gradient for faster paint */
 .backdrop-overlay {
-  background: linear-gradient(to top, #0f0f0f 0%, rgba(15, 15, 15, 0.7) 40%, transparent 100%);
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, #0f0f0f 0%, rgba(15, 15, 15, 0.6) 50%, transparent 100%);
   contain: strict;
+  pointer-events: none;
+}
+
+/* Poster container - optimized */
+.poster-container {
+  contain: layout style;
+  transform: translateZ(0);
 }
 
 /* Rating item with theme color */
