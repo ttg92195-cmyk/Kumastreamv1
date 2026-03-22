@@ -220,8 +220,8 @@ export default function SeriesDetailPage() {
             {series.quality?.split('/')[0]?.trim() && <div className="absolute top-1 left-1 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full max-w-[60px] truncate">{series.quality.split('/')[0].trim()}</div>}
             {!series.quality && series.quality4k && <div className="absolute top-1 left-1 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-theme">4K</div>}
           </div>
-          <div className="flex-1 pb-2">
-            <h1 className="text-white text-xl font-bold mb-2">{series.title}</h1>
+          <div className="movie-info-content flex-1 pb-2">
+            <h1 className="movie-title text-white text-xl font-bold mb-2">{series.title}</h1>
             <MetaInfo year={series.year} rating={series.rating} seasons={series.seasons} />
           </div>
         </div>

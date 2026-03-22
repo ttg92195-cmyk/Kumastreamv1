@@ -620,6 +620,16 @@ img {
   transform: translateZ(0);
 }
 
+/* Movie info content - optimized */
+.movie-info-content {
+  contain: layout style;
+}
+
+/* Movie title - optimized */
+.movie-title {
+  contain: layout;
+}
+
 /* Rating item with theme color */
 .movie-meta-rating {
   color: var(--theme-color);
