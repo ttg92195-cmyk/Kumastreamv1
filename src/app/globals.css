@@ -598,6 +598,18 @@ img {
   contain: layout style;
 }
 
+/* Backdrop container - INP optimized */
+.backdrop-container {
+  contain: layout style;
+  isolation: isolate;
+}
+
+/* Backdrop overlay - solid color instead of gradient for faster render */
+.backdrop-overlay {
+  background: linear-gradient(to top, #0f0f0f 0%, rgba(15, 15, 15, 0.7) 40%, transparent 100%);
+  contain: strict;
+}
+
 /* Rating item with theme color */
 .movie-meta-rating {
   color: var(--theme-color);
