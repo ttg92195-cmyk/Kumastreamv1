@@ -228,7 +228,7 @@ export default function SeriesDetailPage() {
 
         <GenreTags genres={series.genres} />
 
-        <div className="flex items-center gap-2 border-b border-gray-800 mb-4">
+        <div className="tab-nav-container flex items-center gap-2 border-b border-gray-800 mb-4">
           {TABS.map(t => <TabBtn key={t.id} id={t.id} label={t.label} active={activeTab === t.id} onClick={() => handleTabChange(t.id)} />)}
         </div>
 

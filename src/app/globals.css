@@ -654,6 +654,21 @@ img {
   will-change: opacity;
 }
 
+/* Tab navigation container - INP optimized */
+.tab-nav-container {
+  contain: layout style;
+}
+
+/* Tab button - optimized */
+.tab-btn {
+  contain: layout;
+}
+
+/* Tab indicator - optimized */
+.tab-indicator {
+  contain: strict;
+}
+
 /* Rating item with theme color */
 .movie-meta-rating {
   color: var(--theme-color);

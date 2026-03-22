@@ -319,11 +319,11 @@ export default function MovieDetailPage() {
           </div>
         )}
 
-        <div className="flex items-center gap-2 border-b border-gray-800 mb-4">
+        <div className="tab-nav-container flex items-center gap-2 border-b border-gray-800 mb-4">
           {tabs.map((tab) => (
-            <button key={tab.id} onClick={() => handleTabChange(tab.id)} className={cn('px-4 py-3 text-sm font-medium relative active:scale-95', activeTab === tab.id ? '' : 'text-gray-400 hover:text-white')} style={activeTab === tab.id ? { color: themeColor } : {}}>
+            <button key={tab.id} onClick={() => handleTabChange(tab.id)} className={cn('tab-btn px-4 py-3 text-sm font-medium relative active:scale-95', activeTab === tab.id ? '' : 'text-gray-400 hover:text-white')} style={activeTab === tab.id ? { color: themeColor } : {}}>
               {tab.label}
-              {activeTab === tab.id && (<div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ backgroundColor: themeColor }} />)}
+              {activeTab === tab.id && (<div className="tab-indicator absolute bottom-0 left-0 right-0 h-0.5" style={{ backgroundColor: themeColor }} />)}
             </button>
           ))}
         </div>
