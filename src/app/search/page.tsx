@@ -156,9 +156,10 @@ function SearchContent() {
         quality4k={post.quality4k}
         quality={post.quality}
         type={post.type}
+        themeColor={themeColor}
       />
     )),
-    [posts]
+    [posts, themeColor]
   );
 
   const paginationData = useMemo(() => {

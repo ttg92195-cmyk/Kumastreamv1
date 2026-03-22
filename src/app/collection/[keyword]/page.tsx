@@ -246,6 +246,7 @@ export default function CollectionPage() {
                       quality4k={movie.quality4k}
                       quality={movie.quality}
                       type="movie"
+                      themeColor={themeColor}
                     />
                   ))}
                 </div>
@@ -271,6 +272,7 @@ export default function CollectionPage() {
                       quality4k={s.quality4k}
                       quality={s.quality}
                       type="series"
+                      themeColor={themeColor}
                     />
                   ))}
                 </div>

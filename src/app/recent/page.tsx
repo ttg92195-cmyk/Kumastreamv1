@@ -3,10 +3,12 @@
 import { Header } from '@/components/movie/Header';
 import { MovieCard } from '@/components/movie/MovieCard';
 import { useAppStore } from '@/store/useAppStore';
+import { useSettingsStore } from '@/stores/settings-store';
 import { Trash2 } from 'lucide-react';
 
 export default function RecentPage() {
   const { recents, clearRecents } = useAppStore();
+  const themeColor = useSettingsStore(s => s.themeColor);
 
   const movies = recents.filter((r) => r.type === 'movie' && r.movie);
   const series = recents.filter((r) => r.type === 'series' && r.series);
@@ -53,6 +55,7 @@ export default function RecentPage() {
                         quality4k={recent.movie.quality4k}
                         quality={recent.movie.quality}
                         type="movie"
+                        themeColor={themeColor}
                       />
                     )
                   ))}
@@ -77,6 +80,7 @@ export default function RecentPage() {
                         quality4k={recent.series.quality4k}
                         quality={recent.series.quality}
                         type="series"
+                        themeColor={themeColor}
                       />
                     )
                   ))}
