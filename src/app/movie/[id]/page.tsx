@@ -173,6 +173,8 @@ export default function MovieDetailPage() {
   const genreList = useMemo(() => (movie?.genres ? movie.genres.split(',').filter(Boolean) : []), [movie?.genres]);
   const posterUrl = movie?.poster || PLACEHOLDER_POSTER;
   const backdropUrl = movie?.backdrop || posterUrl;
+  // Pre-compute rating string to avoid function call in render
+  const ratingDisplay = useMemo(() => movie?.rating.toFixed(1) ?? '', [movie?.rating]);
 
   if (loading) {
     return (
@@ -302,10 +304,11 @@ export default function MovieDetailPage() {
           </div>
           <div className="flex-1 pb-2">
             <h1 className="text-white text-xl font-bold mb-2">{movie.title}</h1>
-            <div className="flex items-center gap-4 text-sm text-gray-400">
-              <div className="flex items-center gap-1"><Calendar className="w-4 h-4" /><span>{movie.year}</span></div>
-              <div className="flex items-center gap-1"><Star className="w-4 h-4" style={{ color: themeColor, fill: themeColor }} /><span>{movie.rating.toFixed(1)}</span></div>
-              <div className="flex items-center gap-1"><Clock className="w-4 h-4" /><span>{movie.duration} min</span></div>
+            {/* Optimized meta section with CSS containment */}
+            <div className="movie-meta-row" style={{ contain: 'layout style' }}>
+              <span className="movie-meta-item">📅 {movie.year}</span>
+              <span className="movie-meta-item movie-meta-rating">⭐ {ratingDisplay}</span>
+              <span className="movie-meta-item">⏱ {movie.duration} min</span>
             </div>
           </div>
         </div>
@@ -331,8 +334,8 @@ export default function MovieDetailPage() {
       {/* Download Modal - Original Design */}
       {showDownloadModal && downloadLinksEnabled && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={handleCloseDownloadModal} />
+          {/* Backdrop - no blur for better INP */}
+          <div className="absolute inset-0 bg-black/80" onClick={handleCloseDownloadModal} />
           
           {/* Modal Content */}
           <div className="relative w-full max-w-lg bg-[#0f0f0f] rounded-t-2xl sm:rounded-2xl overflow-hidden flex flex-col max-h-[90vh] sm:max-h-[85vh]" onClick={(e) => e.stopPropagation()}>

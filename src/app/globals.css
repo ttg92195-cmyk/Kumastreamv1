@@ -545,6 +545,34 @@ img {
   contain: paint;
 }
 
+/* ================================
+   MOVIE META ROW - INP OPTIMIZED
+   ================================ */
+
+/* Meta row container - isolated rendering */
+.movie-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: #9ca3af;
+  contain: layout style;
+  content-visibility: auto;
+}
+
+/* Meta item - optimized for minimal paint */
+.movie-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  contain: layout;
+}
+
+/* Rating item with theme color */
+.movie-meta-rating {
+  color: var(--theme-color);
+}
+
 /* Backdrop blur fallback */
 @supports not (backdrop-filter: blur(12px)) {
   .backdrop-blur-sm {
