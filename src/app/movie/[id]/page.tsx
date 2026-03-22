@@ -296,7 +296,7 @@ export default function MovieDetailPage() {
 
       {/* Movie Info */}
       <div className="px-4 -mt-16 relative z-10">
-        <div className="flex items-end gap-4 mb-4">
+        <div className="movie-info-header flex items-end gap-4 mb-4">
           <div className="relative w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden shadow-xl border border-gray-700/30">
             <Image src={posterUrl} alt={movie.title} fill className="object-cover" />
             {movie.quality && movie.quality.split('/')[0].trim() && (<div className="absolute top-1 left-1 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full max-w-[60px] truncate">{movie.quality.split('/')[0].trim()}</div>)}
@@ -305,7 +305,7 @@ export default function MovieDetailPage() {
           <div className="flex-1 pb-2">
             <h1 className="text-white text-xl font-bold mb-2">{movie.title}</h1>
             {/* Optimized meta section with CSS containment */}
-            <div className="movie-meta-row" style={{ contain: 'layout style' }}>
+            <div className="movie-meta-row">
               <span className="movie-meta-item">📅 {movie.year}</span>
               <span className="movie-meta-item movie-meta-rating">⭐ {ratingDisplay}</span>
               <span className="movie-meta-item">⏱ {movie.duration} min</span>

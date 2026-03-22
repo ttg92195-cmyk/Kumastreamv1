@@ -557,7 +557,6 @@ img {
   font-size: 0.875rem;
   color: #9ca3af;
   contain: layout style;
-  content-visibility: auto;
 }
 
 /* Meta item - optimized for minimal paint */
@@ -566,6 +565,11 @@ img {
   align-items: center;
   gap: 0.25rem;
   contain: layout;
+}
+
+/* Movie info header - parent container optimization */
+.movie-info-header {
+  contain: layout style;
 }
 
 /* Rating item with theme color */
