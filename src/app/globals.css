@@ -746,6 +746,31 @@ img {
   contain: layout style;
 }
 
+/* Movie card components - optimized */
+.movie-card-link {
+  contain: layout;
+}
+
+.movie-card-poster {
+  contain: layout style;
+}
+
+.movie-card-badge {
+  contain: layout;
+}
+
+.movie-card-rating {
+  contain: layout;
+}
+
+.movie-card-info {
+  contain: layout;
+}
+
+.movie-card-title {
+  contain: layout;
+}
+
 /* Rating item with theme color */
 .movie-meta-rating {
   color: var(--theme-color);

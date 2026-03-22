@@ -89,9 +89,9 @@ const CastSection = memo(({ casts }: { casts: Cast[] }) => {
   );
 });
 
-const SimilarGrid = memo(({ items }: { items: Similar[] }) => {
+const SimilarGrid = memo(({ items, themeColor }: { items: Similar[]; themeColor: string }) => {
   if (!items.length) return <p className="text-gray-500 text-center py-10">No similar series found</p>;
-  return <div className="grid grid-cols-3 gap-3">{items.map(s => <MovieCard key={s.id} id={s.id} title={s.title} year={s.year} rating={s.rating} poster={s.poster || PLACEHOLDER} quality4k={s.quality4k} quality={s.quality} type="series" />)}</div>;
+  return <div className="grid grid-cols-3 gap-3">{items.map(s => <MovieCard key={s.id} id={s.id} title={s.title} year={s.year} rating={s.rating} poster={s.poster || PLACEHOLDER} quality4k={s.quality4k} quality={s.quality} type="series" themeColor={themeColor} />)}</div>;
 });
 
 const EpisodeItem = memo(({ ep, expanded, onToggle }: { ep: Episode; expanded: boolean; onToggle: () => void }) => (
@@ -150,6 +150,7 @@ export default function SeriesDetailPage() {
   const [expandedEpisodes, setExpandedEpisodes] = useState<Record<string, boolean>>({});
 
   const dlEnabled = useSettingsStore(s => s.showAllDownloadLinks);
+  const themeColor = useSettingsStore(s => s.themeColor);
   const addRecent = useAppStore(s => s.addRecent);
   const addBm = useAppStore(s => s.addBookmark);
   const rmBm = useAppStore(s => s.removeBookmark);
@@ -268,7 +269,7 @@ export default function SeriesDetailPage() {
         {activeTab === 'explore' && (
           <div>
             <h3 className="text-white font-semibold mb-4">You may also like</h3>
-            <SimilarGrid items={similar} />
+            <SimilarGrid items={similar} themeColor={themeColor} />
           </div>
         )}
       </div>

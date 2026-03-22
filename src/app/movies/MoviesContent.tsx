@@ -96,9 +96,9 @@ export default function MoviesContent() {
 
   const renderedMovies = useMemo(() => 
     movies.map((m) => (
-      <MovieCard key={m.id} {...m} type="movie" />
+      <MovieCard key={m.id} {...m} type="movie" themeColor={themeColor} />
     )),
-    [movies]
+    [movies, themeColor]
   );
 
   const paginationData = useMemo(() => {

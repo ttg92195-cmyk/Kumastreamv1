@@ -96,9 +96,9 @@ export default function SeriesContent() {
 
   const renderedSeries = useMemo(() => 
     series.map((s) => (
-      <MovieCard key={s.id} {...s} type="series" />
+      <MovieCard key={s.id} {...s} type="series" themeColor={themeColor} />
     )),
-    [series]
+    [series, themeColor]
   );
 
   const paginationData = useMemo(() => {

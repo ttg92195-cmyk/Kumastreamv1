@@ -3,9 +3,11 @@
 import { Header } from '@/components/movie/Header';
 import { MovieCard } from '@/components/movie/MovieCard';
 import { useAppStore } from '@/store/useAppStore';
+import { useSettingsStore } from '@/stores/settings-store';
 
 export default function BookmarkPage() {
   const { bookmarks } = useAppStore();
+  const themeColor = useSettingsStore(s => s.themeColor);
 
   const movies = bookmarks.filter((b) => b.type === 'movie' && b.movie);
   const series = bookmarks.filter((b) => b.type === 'series' && b.series);
@@ -41,6 +43,7 @@ export default function BookmarkPage() {
                         quality4k={bookmark.movie.quality4k}
                         quality={bookmark.movie.quality}
                         type="movie"
+                        themeColor={themeColor}
                       />
                     )
                   ))}
@@ -65,6 +68,7 @@ export default function BookmarkPage() {
                         quality4k={bookmark.series.quality4k}
                         quality={bookmark.series.quality}
                         type="series"
+                        themeColor={themeColor}
                       />
                     )
                   ))}

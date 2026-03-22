@@ -272,7 +272,7 @@ export default function MovieDetailPage() {
           <div className="tab-content-container">
             <h3 className="text-white font-semibold mb-4">You may also like</h3>
             <div className="grid grid-cols-3 gap-3">
-              {similarMovies.map((m) => (<MovieCard key={m.id} id={m.id} title={m.title} year={m.year} rating={m.rating} poster={m.poster || PLACEHOLDER_POSTER} quality4k={m.quality4k} quality={m.quality} type="movie" />))}
+              {similarMovies.map((m) => (<MovieCard key={m.id} id={m.id} title={m.title} year={m.year} rating={m.rating} poster={m.poster || PLACEHOLDER_POSTER} quality4k={m.quality4k} quality={m.quality} type="movie" themeColor={themeColor} />))}
             </div>
             {similarMovies.length === 0 && <p className="text-gray-500 text-center py-10">No similar movies found</p>}
           </div>
