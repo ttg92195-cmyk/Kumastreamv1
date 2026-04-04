@@ -32,6 +32,7 @@ function normalizeSeries(s: any) {
           episode: typeof ep.episode === 'number' ? ep.episode : 0,
           title: ep.title || `Episode ${ep.episode}`,
           duration: typeof ep.duration === 'number' ? ep.duration : 0,
+          airDate: ep.airDate || null,
           fileSize: ep.fileSize || '',
           quality: ep.quality || '',
           format: ep.format || '',

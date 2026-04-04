@@ -23,6 +23,7 @@ interface Episode {
   episode: number;
   title: string;
   duration: number;
+  airDate: string | null;
   fileSize: string | null;
   quality: string | null;
   format: string | null;
@@ -602,7 +603,7 @@ export default function SeriesDetailPage() {
                                   <div className="text-left">
                                     <p className="text-white text-sm">{ep.title}</p>
                                     <p className="text-gray-500 text-xs">
-                                      {ep.duration} min{ep.fileSize ? ` • ${ep.fileSize}` : ''}
+                                      {ep.airDate ? `${ep.airDate} • ` : ''}{ep.duration} min
                                     </p>
                                   </div>
                                 </div>

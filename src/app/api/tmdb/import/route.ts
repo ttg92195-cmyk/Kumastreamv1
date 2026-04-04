@@ -190,6 +190,7 @@ export async function POST(request: Request) {
                         episode: ep.episode_number || 1,
                         title: ep.name || `Episode ${ep.episode_number}`,
                         duration: ep.runtime || 45,
+                        airDate: ep.air_date || null,
                         fileSize: '',
                         quality: '1080p HEVC',
                         format: 'MKV',

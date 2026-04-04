@@ -95,6 +95,7 @@ model Episode {
   episode       Int
   title         String
   duration      Int            @default(0) // in minutes
+  airDate       String?        // Episode air date from TMDB (e.g., "2026-04-01")
   fileSize      String?
   quality       String?
   format        String?
