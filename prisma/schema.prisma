@@ -1,0 +1,188 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+}
+
+model User {
+  id        String      @id @default(cuid())
+  username  String      @unique
+  password  String
+  isAdmin   Boolean     @default(false)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  bookmarks Bookmark[]
+  recents   RecentView[]
+}
+
+model Movie {
+  id            String         @id @default(cuid())
+  tmdbId        Int?           @unique // TMDB ID for imported movies
+  title         String
+  year          Int
+  rating        Float          @default(0)
+  duration      Int            @default(0) // in minutes
+  poster        String?
+  backdrop      String?
+  description   String         @default("")
+  review        String?
+  genres        String         @default("") // comma-separated
+  tags          String         @default("") // comma-separated tags like "4K, Trending, Anime"
+  collections   String         @default("") // comma-separated collections like "Marvel, DC"
+  quality4k     Boolean        @default(false)
+  director      String?
+  fileSize      String?        // e.g., "7.7 GB / 3.4 GB / 1.5 GB"
+  quality       String?        // e.g., "Blu-Ray 4K HEVC / 1080p HEVC / 720p"
+  format        String?        // e.g., "MKV / MP4"
+  subtitle      String?        // e.g., "Myanmar Subtitle (Hardsub)"
+  imdbRating    Float?
+  rtRating      Int?           // Rotten Tomatoes percentage
+  downloadLinks DownloadLink[]
+  casts         Cast[]
+  bookmarks     Bookmark[]
+  recents       RecentView[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([tmdbId])
+  @@index([genres])
+  @@index([tags])
+  @@index([collections])
+}
+
+model Series {
+  id            String         @id @default(cuid())
+  tmdbId        Int?           @unique // TMDB ID for imported series
+  title         String
+  year          Int
+  rating        Float          @default(0)
+  poster        String?
+  backdrop      String?
+  description   String         @default("")
+  genres        String         @default("") // comma-separated
+  tags          String         @default("") // comma-separated tags like "4K, Trending, K Drama"
+  collections   String         @default("") // comma-separated collections like "Marvel, DC"
+  quality4k     Boolean        @default(false)
+  quality       String?        // e.g., "Blu-Ray 4K HEVC / 1080p HEVC / 720p"
+  seasons       Int            @default(1)
+  totalEpisodes Int            @default(0)
+  downloadLinks DownloadLink[]
+  episodes      Episode[]
+  casts         Cast[]
+  bookmarks     Bookmark[]
+  recents       RecentView[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([tmdbId])
+  @@index([genres])
+  @@index([tags])
+  @@index([collections])
+}
+
+model Episode {
+  id            String         @id @default(cuid())
+  tmdbId        Int?           @unique // TMDB episode ID
+  seriesId      String
+  series        Series         @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  season        Int
+  episode       Int
+  title         String
+  duration      Int            @default(0) // in minutes
+  fileSize      String?
+  quality       String?
+  format        String?
+  downloadLinks DownloadLink[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([seriesId])
+  @@index([season, episode])
+}
+
+model DownloadLink {
+  id        String   @id @default(cuid())
+  movieId   String?
+  seriesId  String?
+  episodeId String?
+  server    String   @default("Server 1") // e.g., "Server 1", "Server 2"
+  quality   String   // e.g., "4K", "1080p", "720p"
+  url       String
+  size      String?  // file size
+  createdAt DateTime @default(now())
+
+  movie   Movie?   @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  series  Series?  @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  episode Episode? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+}
+
+model Cast {
+  id       String  @id @default(cuid())
+  name     String
+  photo    String?
+  role     String?
+  movieId  String?
+  seriesId String?
+  movie    Movie?  @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  series   Series? @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+
+  @@index([movieId])
+  @@index([seriesId])
+}
+
+model Genre {
+  id        String   @id @default(cuid())
+  name      String
+  type      String   // "movie" or "tv"
+  createdAt DateTime @default(now())
+
+  @@unique([name, type])
+}
+
+model Collection {
+  id        String   @id @default(cuid())
+  name      String
+  type      String   // "movie" or "series"
+  createdAt DateTime @default(now())
+
+  @@unique([name, type])
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String
+  type      String   // "movie" or "series"
+  createdAt DateTime @default(now())
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movieId   String?
+  seriesId  String?
+  movie     Movie?   @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  series    Series?  @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model RecentView {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movieId   String?
+  seriesId  String?
+  movie     Movie?   @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  series    Series?  @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  viewedAt  DateTime @default(now())
+
+  @@index([userId])
+}
