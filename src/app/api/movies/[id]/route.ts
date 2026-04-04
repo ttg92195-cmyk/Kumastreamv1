@@ -95,11 +95,24 @@ export async function GET(
         return NextResponse.json({ error: 'Movie not found', id }, { status: 404 });
       }
 
-      // Get similar movies based on genres
-      const genres = (movie.genres || '').split(',').filter(Boolean);
+      // Get similar movies based on genres - sorted by relevance (more matching genres = higher score)
+      const genres = (movie.genres || '').split(',').filter(Boolean).map((g: string) => g.trim().toLowerCase());
+      
       const similarMovies = allMovies
-        .filter((m: any) => m.id !== id && genres.some((g: string) => m.genres && m.genres.includes(g.trim())))
-        .slice(0, 6);
+        .filter((m: any) => m.id !== id && m.genres)
+        .map((m: any) => {
+          const movieGenres = (m.genres || '').split(',').filter(Boolean).map((g: string) => g.trim().toLowerCase());
+          const matchingGenres = genres.filter((g: string) => movieGenres.includes(g)).length;
+          return { ...m, relevance: matchingGenres };
+        })
+        .filter((m: any) => m.relevance > 0) // Only include movies with at least one matching genre
+        .sort((a: any, b: any) => {
+          // Sort by relevance (more matching genres first), then by rating for variety
+          if (b.relevance !== a.relevance) return b.relevance - a.relevance;
+          return (b.rating || 0) - (a.rating || 0);
+        })
+        .slice(0, 6)
+        .map(({ relevance, ...m }) => m); // Remove relevance field from result
 
       console.log('Returning movie:', movie.title, 'with', similarMovies.length, 'similar movies');
 

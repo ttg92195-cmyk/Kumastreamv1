@@ -144,18 +144,7 @@ export default function SettingsPage() {
               action="link"
               href="/admin/login"
             />
-          ) : (
-            // Placeholder while hydrating - prevents flash
-            <div className="py-4">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-gray-800 animate-pulse" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 w-24 bg-gray-800 rounded animate-pulse" />
-                  <div className="h-3 w-32 bg-gray-800 rounded animate-pulse" />
-                </div>
-              </div>
-            </div>
-          )}
+          ) : null}
         </section>
 
         {/* About */}

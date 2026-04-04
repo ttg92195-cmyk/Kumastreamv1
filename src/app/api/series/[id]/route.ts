@@ -129,11 +129,24 @@ export async function GET(
         {} as Record<number, typeof series.episodes>
       );
 
-      // Get similar series based on genres
-      const genres = (series.genres || '').split(',').filter(Boolean);
+      // Get similar series based on genres - sorted by relevance (more matching genres = higher score)
+      const genres = (series.genres || '').split(',').filter(Boolean).map((g: string) => g.trim().toLowerCase());
+      
       const similarSeries = allSeries
-        .filter((s: any) => s.id !== id && genres.some((g: string) => s.genres && s.genres.includes(g.trim())))
-        .slice(0, 6);
+        .filter((s: any) => s.id !== id && s.genres)
+        .map((s: any) => {
+          const seriesGenres = (s.genres || '').split(',').filter(Boolean).map((g: string) => g.trim().toLowerCase());
+          const matchingGenres = genres.filter((g: string) => seriesGenres.includes(g)).length;
+          return { ...s, relevance: matchingGenres };
+        })
+        .filter((s: any) => s.relevance > 0) // Only include series with at least one matching genre
+        .sort((a: any, b: any) => {
+          // Sort by relevance (more matching genres first), then by rating for variety
+          if (b.relevance !== a.relevance) return b.relevance - a.relevance;
+          return (b.rating || 0) - (a.rating || 0);
+        })
+        .slice(0, 6)
+        .map(({ relevance, ...s }) => s); // Remove relevance field from result
 
       console.log('Returning series:', series.title, 'with', similarSeries.length, 'similar series');
 

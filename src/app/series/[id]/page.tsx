@@ -602,7 +602,7 @@ export default function SeriesDetailPage() {
                                   <div className="text-left">
                                     <p className="text-white text-sm">{ep.title}</p>
                                     <p className="text-gray-500 text-xs">
-                                      {ep.duration} min • {ep.fileSize || '1.2 GB'}
+                                      {ep.duration} min{ep.fileSize ? ` • ${ep.fileSize}` : ''}
                                     </p>
                                   </div>
                                 </div>
