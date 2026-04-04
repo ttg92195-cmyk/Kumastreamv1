@@ -212,8 +212,10 @@ function DashboardContent() {
         seriesParams.set('genre', selectedGenre);
       }
       
-      // Year filter needs to be applied on client side or add API support
-      // For now, we'll filter year on client side after fetch
+      if (selectedYear) {
+        movieParams.set('year', selectedYear);
+        seriesParams.set('year', selectedYear);
+      }
 
       const [moviesRes, seriesRes] = await Promise.all([
         fetch(`/api/movies?${movieParams.toString()}`),
@@ -222,33 +224,19 @@ function DashboardContent() {
 
       if (moviesRes.ok) {
         const data = await moviesRes.json();
-        let filteredMovies = data.movies || [];
-        
-        // Apply year filter on client side
-        if (selectedYear) {
-          filteredMovies = filteredMovies.filter((m: Movie) => String(m.year) === selectedYear);
-        }
-        
-        setMovies(filteredMovies);
+        setMovies(data.movies || []);
         setFilteredCounts(prev => ({ 
           ...prev, 
-          movies: selectedYear ? filteredMovies.length : (data.total || 0)
+          movies: data.total || 0
         }));
       }
 
       if (seriesRes.ok) {
         const data = await seriesRes.json();
-        let filteredSeries = data.series || [];
-        
-        // Apply year filter on client side
-        if (selectedYear) {
-          filteredSeries = filteredSeries.filter((s: Series) => String(s.year) === selectedYear);
-        }
-        
-        setSeries(filteredSeries);
+        setSeries(data.series || []);
         setFilteredCounts(prev => ({ 
           ...prev, 
-          series: selectedYear ? filteredSeries.length : (data.total || 0)
+          series: data.total || 0
         }));
       }
     } catch (err) {

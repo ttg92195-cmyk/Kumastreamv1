@@ -64,6 +64,7 @@ export async function GET(request: Request) {
     const search = searchParams.get('search');
     const tag = searchParams.get('tag');
     const collection = searchParams.get('collection');
+    const year = searchParams.get('year');
     const limitParam = searchParams.get('limit');
     const limit = limitParam ? parseInt(limitParam) : 500;
     const offset = parseInt(searchParams.get('offset') || '0');
@@ -86,6 +87,10 @@ export async function GET(request: Request) {
 
     if (collection) {
       conditions.push({ collections: { contains: collection, mode: 'insensitive' } });
+    }
+
+    if (year) {
+      conditions.push({ year: parseInt(year) });
     }
 
     const whereClause = conditions.length > 0 ? { AND: conditions } : {};
