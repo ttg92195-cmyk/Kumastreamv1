@@ -1,8 +1,8 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Film, Tv, Tag, FolderOpen, Grid3X3, Loader2, X } from 'lucide-react';
+import { ArrowLeft, Film, Tv, Tag, FolderOpen, Grid3X3, Loader2, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -63,6 +63,8 @@ interface Content {
   quality: string;
 }
 
+const ITEMS_PER_PAGE = 30;
+
 // Content Card Component
 function ContentCard({ id, title, year, poster, rating, quality, type }: {
   id: string;
@@ -117,6 +119,7 @@ function GenresContent() {
   const tag = searchParams.get('tag') || '';
   const collection = searchParams.get('collection') || '';
   const type = searchParams.get('type') || 'all';
+  const page = parseInt(searchParams.get('page') || '1', 10);
   
   const isShowTags = tag === '_show_tags';
   const isShowCollections = collection === '_show_collections';
@@ -124,6 +127,8 @@ function GenresContent() {
   
   const [movies, setMovies] = useState<Content[]>([]);
   const [series, setSeries] = useState<Content[]>([]);
+  const [movieTotal, setMovieTotal] = useState(0);
+  const [seriesTotal, setSeriesTotal] = useState(0);
   const [resultsLoading, setResultsLoading] = useState(false);
   
   const activeTab = isShowTags ? 'tags' : isShowCollections ? 'collections' : (tag || collection) ? null : 'genres';
@@ -142,37 +147,42 @@ function GenresContent() {
     if (hasRealFilter) {
       fetchResults();
     }
-  }, [tag, collection, type, hasRealFilter]);
+  }, [tag, collection, type, page, hasRealFilter]);
 
   const fetchResults = async () => {
     setResultsLoading(true);
     try {
+      const offset = (page - 1) * ITEMS_PER_PAGE;
       const actualTag = isShowTags ? null : tag;
       const actualCollection = isShowCollections ? null : collection;
       
       if (actualTag) {
-        const moviesRes = await fetch(`/api/movies?tag=${encodeURIComponent(actualTag)}&limit=100`);
+        const moviesRes = await fetch(`/api/movies?tag=${encodeURIComponent(actualTag)}&limit=${ITEMS_PER_PAGE}&offset=${offset}`);
         if (moviesRes.ok) {
           const data = await moviesRes.json();
           setMovies(data.movies || []);
+          setMovieTotal(data.total || 0);
         }
         
-        const seriesRes = await fetch(`/api/series?tag=${encodeURIComponent(actualTag)}&limit=100`);
+        const seriesRes = await fetch(`/api/series?tag=${encodeURIComponent(actualTag)}&limit=${ITEMS_PER_PAGE}&offset=${offset}`);
         if (seriesRes.ok) {
           const data = await seriesRes.json();
           setSeries(data.series || []);
+          setSeriesTotal(data.total || 0);
         }
       } else if (actualCollection) {
-        const moviesRes = await fetch(`/api/movies?collection=${encodeURIComponent(actualCollection)}&limit=100`);
+        const moviesRes = await fetch(`/api/movies?collection=${encodeURIComponent(actualCollection)}&limit=${ITEMS_PER_PAGE}&offset=${offset}`);
         if (moviesRes.ok) {
           const data = await moviesRes.json();
           setMovies(data.movies || []);
+          setMovieTotal(data.total || 0);
         }
         
-        const seriesRes = await fetch(`/api/series?collection=${encodeURIComponent(actualCollection)}&limit=100`);
+        const seriesRes = await fetch(`/api/series?collection=${encodeURIComponent(actualCollection)}&limit=${ITEMS_PER_PAGE}&offset=${offset}`);
         if (seriesRes.ok) {
           const data = await seriesRes.json();
           setSeries(data.series || []);
+          setSeriesTotal(data.total || 0);
         }
       }
     } catch (err) {
@@ -187,11 +197,11 @@ function GenresContent() {
   };
 
   const handleTagClick = (selectedTag: string, selectedType: string) => {
-    router.push(`/genres?tag=${encodeURIComponent(selectedTag)}&type=${selectedType}`);
+    router.push(`/genres?tag=${encodeURIComponent(selectedTag)}&type=${selectedType}&page=1`);
   };
 
   const handleCollectionClick = (selectedCollection: string) => {
-    router.push(`/genres?collection=${encodeURIComponent(selectedCollection)}&type=all`);
+    router.push(`/genres?collection=${encodeURIComponent(selectedCollection)}&type=all&page=1`);
   };
 
   const handleGenreClick = (name: string, contentType: string) => {
@@ -207,6 +217,68 @@ function GenresContent() {
     { id: 'tags', label: 'Tags', icon: Tag },
     { id: 'collections', label: 'Collections', icon: FolderOpen },
   ] as const;
+
+  // Pagination helpers
+  const goToPage = (newPage: number) => {
+    const params = new URLSearchParams();
+    if (tag && !isShowTags) params.set('tag', tag);
+    if (collection && !isShowCollections) params.set('collection', collection);
+    params.set('type', type);
+    params.set('page', String(newPage));
+    router.push(`/genres?${params.toString()}`);
+  };
+
+  // Calculate total pages based on active content type
+  const totalCount = type === 'movie' ? movieTotal : type === 'series' ? seriesTotal : Math.max(movieTotal, seriesTotal);
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+
+    const pages: (number | string)[] = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (page <= 3) {
+        pages.push(1, 2, 3, '...', totalPages);
+      } else if (page >= totalPages - 2) {
+        pages.push(1, '...', totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(1, '...', page, '...', totalPages);
+      }
+    }
+
+    return (
+      <div className="flex items-center justify-center gap-1 py-4 mt-4">
+        <button 
+          onClick={() => goToPage(page - 1)} 
+          disabled={page === 1}
+          className="p-2 rounded-lg bg-gray-700 text-white disabled:opacity-40 hover:bg-gray-600"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        {pages.map((p, idx) => (
+          typeof p === 'number' ? (
+            <button 
+              key={idx} 
+              onClick={() => goToPage(p)}
+              className={cn('w-10 h-10 rounded-lg text-sm font-medium',
+                page === p ? 'bg-red-500 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600')}
+            >
+              {p}
+            </button>
+          ) : <span key={idx} className="text-gray-500 px-2">...</span>
+        ))}
+        <button 
+          onClick={() => goToPage(page + 1)} 
+          disabled={page === totalPages}
+          className="p-2 rounded-lg bg-gray-700 text-white disabled:opacity-40 hover:bg-gray-600"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
+      </div>
+    );
+  };
 
   if (loading) {
     return (
@@ -251,13 +323,14 @@ function GenresContent() {
                 <div className="space-y-3">
                   <h3 className="text-white font-semibold flex items-center gap-2">
                     <Film className="w-4 h-4 text-red-500" />
-                    Movies ({movies.length})
+                    Movies ({movieTotal})
                   </h3>
                   <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
                     {movies.map((m) => (
                       <ContentCard key={m.id} {...m} type="movie" />
                     ))}
                   </div>
+                  {type === 'movie' && renderPagination()}
                 </div>
               )}
               
@@ -265,13 +338,14 @@ function GenresContent() {
                 <div className="space-y-3">
                   <h3 className="text-white font-semibold flex items-center gap-2">
                     <Tv className="w-4 h-4 text-red-500" />
-                    Series ({series.length})
+                    Series ({seriesTotal})
                   </h3>
                   <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
                     {series.map((s) => (
                       <ContentCard key={s.id} {...s} type="series" />
                     ))}
                   </div>
+                  {type === 'series' && renderPagination()}
                 </div>
               )}
               
@@ -280,6 +354,8 @@ function GenresContent() {
                   <p className="text-gray-400">No results found</p>
                 </div>
               )}
+              
+              {type === 'all' && (movies.length > 0 || series.length > 0) && renderPagination()}
             </>
           )}
         </div>
