@@ -167,8 +167,15 @@ function SearchContent() {
       <div className="p-4">
         {loading ? (
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-            {[...Array(12)].map((_, i) => (
-              <div key={i} className="aspect-[2/3] bg-gray-800 rounded-lg animate-pulse" />
+            {[...Array(30)].map((_, i) => (
+              <div key={i}>
+                <div className="relative aspect-[2/3] bg-gray-800 rounded-md animate-pulse">
+                  <div className="absolute top-1 left-1 w-8 h-4 bg-gray-700 rounded" />
+                  <div className="absolute top-1 right-1 w-10 h-4 bg-gray-700 rounded" />
+                </div>
+                <div className="mt-1.5 h-3 bg-gray-800 rounded animate-pulse w-4/5" />
+                <div className="mt-1 h-2.5 bg-gray-800 rounded animate-pulse w-1/3" />
+              </div>
             ))}
           </div>
         ) : (

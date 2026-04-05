@@ -145,10 +145,20 @@ export default function BookmarkPage() {
     <Suspense fallback={
       <div className="min-h-screen bg-[#0f0f0f] pb-20">
         <Header title="Bookmark" showSearch={false} />
-        <div className="p-4 grid grid-cols-3 gap-2">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="aspect-[2/3] bg-gray-800 rounded-md animate-pulse" />
-          ))}
+        <div className="p-4">
+          <div className="h-4 w-20 bg-gray-800 rounded animate-pulse mb-4" />
+          <div className="grid grid-cols-3 gap-2">
+            {[...Array(30)].map((_, i) => (
+              <div key={i}>
+                <div className="relative aspect-[2/3] bg-gray-800 rounded-md animate-pulse">
+                  <div className="absolute top-1 left-1 w-8 h-4 bg-gray-700 rounded" />
+                  <div className="absolute top-1 right-1 w-10 h-4 bg-gray-700 rounded" />
+                </div>
+                <div className="mt-1.5 h-3 bg-gray-800 rounded animate-pulse w-4/5" />
+                <div className="mt-1 h-2.5 bg-gray-800 rounded animate-pulse w-1/3" />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     }>

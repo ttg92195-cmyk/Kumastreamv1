@@ -167,10 +167,19 @@ export default function MoviesContent() {
 
         {loading ? (
           <div className="grid grid-cols-4 gap-2">
-            {[...Array(12)].map((_, i) => (
+            {[...Array(20)].map((_, i) => (
               <div key={i}>
-                <div className="aspect-[2/3] bg-gray-800/50 rounded-md" />
-                <div className="mt-1.5 h-3 bg-gray-800/50 rounded w-3/4" />
+                {/* Poster Skeleton */}
+                <div className="relative aspect-[2/3] bg-gray-800 rounded-md animate-pulse">
+                  {/* Quality Badge Skeleton */}
+                  <div className="absolute top-1 left-1 w-8 h-4 bg-gray-700 rounded" />
+                  {/* Rating Badge Skeleton */}
+                  <div className="absolute top-1 right-1 w-10 h-4 bg-gray-700 rounded" />
+                </div>
+                {/* Title Skeleton */}
+                <div className="mt-1.5 h-3 bg-gray-800 rounded animate-pulse w-4/5" />
+                {/* Year Skeleton */}
+                <div className="mt-1 h-2.5 bg-gray-800 rounded animate-pulse w-1/3" />
               </div>
             ))}
           </div>
