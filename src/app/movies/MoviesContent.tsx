@@ -170,12 +170,7 @@ export default function MoviesContent() {
             {[...Array(20)].map((_, i) => (
               <div key={i}>
                 {/* Poster Skeleton */}
-                <div className="relative aspect-[2/3] bg-gray-800 rounded-md animate-pulse">
-                  {/* Quality Badge Skeleton */}
-                  <div className="absolute top-1 left-1 w-8 h-4 bg-gray-700 rounded" />
-                  {/* Rating Badge Skeleton */}
-                  <div className="absolute top-1 right-1 w-10 h-4 bg-gray-700 rounded" />
-                </div>
+                <div className="aspect-[2/3] bg-gray-800 rounded-md animate-pulse" />
                 {/* Title Skeleton */}
                 <div className="mt-1.5 h-3 bg-gray-800 rounded animate-pulse w-4/5" />
                 {/* Year Skeleton */}

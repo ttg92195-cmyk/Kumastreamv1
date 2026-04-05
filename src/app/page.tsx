@@ -117,16 +117,18 @@ export default function HomePage() {
             <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-2">
               {[...Array(10)].map((_, i) => (
                 <div key={i}>
-                  <div className="aspect-[2/3] bg-gray-800/50 rounded-md" />
-                  <div className="mt-1.5 h-3 bg-gray-800/50 rounded w-3/4" />
+                  <div className="aspect-[2/3] bg-gray-800 rounded-md animate-pulse" />
+                  <div className="mt-1.5 h-3 bg-gray-800 rounded animate-pulse w-4/5" />
+                  <div className="mt-1 h-2.5 bg-gray-800 rounded animate-pulse w-1/3" />
                 </div>
               ))}
             </div>
             <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-2">
               {[...Array(10)].map((_, i) => (
                 <div key={i}>
-                  <div className="aspect-[2/3] bg-gray-800/50 rounded-md" />
-                  <div className="mt-1.5 h-3 bg-gray-800/50 rounded w-3/4" />
+                  <div className="aspect-[2/3] bg-gray-800 rounded-md animate-pulse" />
+                  <div className="mt-1.5 h-3 bg-gray-800 rounded animate-pulse w-4/5" />
+                  <div className="mt-1 h-2.5 bg-gray-800 rounded animate-pulse w-1/3" />
                 </div>
               ))}
             </div>
