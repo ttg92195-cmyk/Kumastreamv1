@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, memo } from 'react';
+import { useEffect, useCallback, memo } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/useAppStore';
@@ -19,8 +19,6 @@ import {
   Database,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-const isClient = typeof window !== 'undefined';
 
 // Menu items defined outside component to prevent recreation
 const BASE_MENU_ITEMS = [
@@ -71,7 +69,6 @@ export function Sidebar() {
   const { sidebarOpen, setSidebarOpen, admin, logoutAdmin, _hasHydrated } = useAppStore();
   const pathname = usePathname();
   const router = useRouter();
-  const [mounted] = useState(isClient);
   
   // Close sidebar on route change
   useEffect(() => {
@@ -104,8 +101,6 @@ export function Sidebar() {
       document.body.style.width = '';
     };
   }, [sidebarOpen]);
-
-  if (!mounted) return null;
   
   // Don't show admin until hydrated to prevent flash
   const currentAdmin = _hasHydrated ? admin : null;
