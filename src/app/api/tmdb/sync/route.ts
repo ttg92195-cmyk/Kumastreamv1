@@ -158,7 +158,7 @@ export async function POST(request: Request) {
       type = 'all', // 'series', 'movies', 'all'
       limit = 20,   // Max items to sync per run
       force = false, // Force sync even if recently synced
-      skipDescription = false // Skip description update to preserve manual edits
+      skipDescription = true // Default: Skip description update to preserve manual edits
     } = body;
 
     const results: SyncResult[] = [];
