@@ -25,17 +25,53 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "CINE STREAM - Movies & Series",
+  title: {
+    default: "CINE STREAM - Movies & Series",
+    template: "%s | CINE STREAM",
+  },
   description: "Watch your favorite movies and TV series in high quality. Myanmar subtitle included.",
-  keywords: ["Movies", "Series", "Streaming", "4K", "Myanmar Subtitle", "Download"],
+  keywords: ["Movies", "Series", "Streaming", "4K", "Myanmar Subtitle", "Download", "Watch Movies", "TV Shows"],
   authors: [{ name: "CINE STREAM" }],
+  creator: "CINE STREAM",
+  publisher: "CINE STREAM",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   icons: {
     icon: "/favicon.ico",
   },
   openGraph: {
-    title: "CINE STREAM",
-    description: "Watch your favorite movies and TV series in high quality",
     type: "website",
+    locale: "en_US",
+    url: "https://kumastreamv1.vercel.app",
+    siteName: "CINE STREAM",
+    title: "CINE STREAM - Movies & Series",
+    description: "Watch your favorite movies and TV series in high quality. Myanmar subtitle included.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "CINE STREAM",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CINE STREAM - Movies & Series",
+    description: "Watch your favorite movies and TV series in high quality. Myanmar subtitle included.",
+    images: ["/og-image.png"],
+  },
+  alternates: {
+    canonical: "https://kumastreamv1.vercel.app",
   },
 };
 
