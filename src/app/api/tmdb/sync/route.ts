@@ -157,7 +157,8 @@ export async function POST(request: Request) {
     const {
       type = 'all', // 'series', 'movies', 'all'
       limit = 20,   // Max items to sync per run
-      force = false // Force sync even if recently synced
+      force = false, // Force sync even if recently synced
+      skipDescription = false // Skip description update to preserve manual edits
     } = body;
 
     const results: SyncResult[] = [];
@@ -244,7 +245,8 @@ export async function POST(request: Request) {
               backdrop: tmdbData.backdrop_path
                 ? `https://image.tmdb.org/t/p/original${tmdbData.backdrop_path}`
                 : series.backdrop || PLACEHOLDER,
-              description: tmdbData.overview || series.description,
+              // Only update description if skipDescription is false
+              ...(skipDescription ? {} : { description: tmdbData.overview || series.description }),
               genres: tmdbData.genres?.map((g: { name: string }) => g.name).join(',') || '',
               tmdbStatus: status,
               lastSyncedAt: new Date()
@@ -391,7 +393,8 @@ export async function POST(request: Request) {
               backdrop: tmdbData.backdrop_path
                 ? `https://image.tmdb.org/t/p/original${tmdbData.backdrop_path}`
                 : movie.backdrop || PLACEHOLDER,
-              description: tmdbData.overview || movie.description,
+              // Only update description if skipDescription is false
+              ...(skipDescription ? {} : { description: tmdbData.overview || movie.description }),
               genres: tmdbData.genres?.map((g: { name: string }) => g.name).join(',') || '',
               duration: tmdbData.runtime || 0,
               lastSyncedAt: new Date()

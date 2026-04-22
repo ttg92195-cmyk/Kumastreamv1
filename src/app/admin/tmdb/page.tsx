@@ -405,6 +405,7 @@ export default function TMDBGeneratorPage() {
   const [syncing, setSyncing] = useState(false);
   const [syncResults, setSyncResults] = useState<any>(null);
   const [syncLoading, setSyncLoading] = useState(false);
+  const [skipDescription, setSkipDescription] = useState(true); // Default: Skip description to preserve manual edits
 
   // Fetch sync stats
   const fetchSyncStats = useCallback(async () => {
@@ -434,7 +435,7 @@ export default function TMDBGeneratorPage() {
       const response = await fetch('/api/tmdb/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, limit: 20 }),
+        body: JSON.stringify({ type, limit: 20, skipDescription }),
       });
       const data = await response.json();
       setSyncResults(data);
@@ -925,6 +926,42 @@ export default function TMDBGeneratorPage() {
                 Sync will update metadata (rating, poster, backdrop) and fetch new episodes for ongoing series.
                 Auto-sync runs daily at midnight via Vercel Cron.
               </p>
+              
+              {/* Skip Description Toggle */}
+              <div className="mb-4 p-3 bg-gray-700/30 rounded-lg border border-gray-700">
+                <button
+                  onClick={() => setSkipDescription(!skipDescription)}
+                  className={cn(
+                    'flex items-center justify-between w-full',
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      'w-5 h-5 rounded border-2 flex items-center justify-center transition-colors',
+                      skipDescription 
+                        ? 'bg-green-500 border-green-500' 
+                        : 'border-gray-500'
+                    )}>
+                      {skipDescription && (
+                        <Check className="w-3 h-3 text-white" />
+                      )}
+                    </div>
+                    <div className="text-left">
+                      <div className={cn(
+                        'text-sm font-medium',
+                        skipDescription ? 'text-green-400' : 'text-gray-300'
+                      )}>
+                        Skip Description Update
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {skipDescription 
+                          ? '✓ Your manual edits (Myanmar descriptions) will be preserved'
+                          : 'TMDB description will overwrite your manual edits'}
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              </div>
               
               <div className="flex flex-wrap gap-3">
                 <button
