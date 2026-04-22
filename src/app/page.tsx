@@ -118,7 +118,7 @@ export default function HomePage() {
         {loading ? (
           <div className="space-y-6">
             {/* Movies Section Skeleton */}
-            <section>
+            <div>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 bg-gray-800 rounded animate-pulse" />
@@ -136,9 +136,9 @@ export default function HomePage() {
                   </div>
                 ))}
               </div>
-            </section>
+            </div>
             {/* Series Section Skeleton */}
-            <section>
+            <div>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 bg-gray-800 rounded animate-pulse" />
@@ -156,7 +156,7 @@ export default function HomePage() {
                   </div>
                 ))}
               </div>
-            </section>
+            </div>
           </div>
         ) : (
           <>
