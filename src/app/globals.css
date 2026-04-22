@@ -1,0 +1,358 @@
+@import "tailwindcss";
+
+:root {
+  /* Theme Colors - RED (permanent) */
+  --theme-color: #ef4444;
+  --theme-color-hover: #dc2626;
+  --theme-color-light: rgba(239, 68, 68, 0.1);
+  --theme-color-medium: rgba(239, 68, 68, 0.2);
+  --theme-color-dark: rgba(239, 68, 68, 0.3);
+
+  /* Background Colors */
+  --background: #0f0f0f;
+  --background-light: #1a1a1a;
+  --background-lighter: #222222;
+  --foreground: #ffffff;
+
+  /* Card & Border */
+  --card: #1a1a1a;
+  --card-hover: #222222;
+  --border: #2a2a2a;
+  --border-light: #3a3a3a;
+
+  /* Input */
+  --input: #1f1f1f;
+
+  /* Overlay */
+  --overlay-light: rgba(0, 0, 0, 0.5);
+  --overlay-medium: rgba(0, 0, 0, 0.7);
+  --overlay-dark: rgba(0, 0, 0, 0.85);
+
+  /* Transition */
+  --transition-fast: 150ms;
+  --transition-normal: 200ms;
+  --transition-slow: 300ms;
+  --easing-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --easing-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+* {
+  border-color: var(--border);
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Fix autofill background color for dark theme */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #1a1a1a inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+input:-moz-autofill,
+input:-moz-autofill-preview {
+  filter: none;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3a3a3a;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4a4a4a;
+}
+
+/* Hide scrollbar utility */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Safe area for mobile */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* ================================
+   OVERLAY STYLES
+   ================================ */
+
+.overlay-light {
+  background-color: var(--overlay-light);
+}
+
+.overlay-medium {
+  background-color: var(--overlay-medium);
+}
+
+.overlay-dark {
+  background-color: var(--overlay-dark);
+}
+
+/* ================================
+   TRANSITION & ANIMATION
+   ================================ */
+
+/* Transition Durations */
+.transition-fast {
+  transition-duration: var(--transition-fast);
+}
+
+.transition-normal {
+  transition-duration: var(--transition-normal);
+}
+
+.transition-slow {
+  transition-duration: var(--transition-slow);
+}
+
+/* Easing */
+.ease-smooth {
+  transition-timing-function: var(--easing-smooth);
+}
+
+.ease-bounce {
+  transition-timing-function: var(--easing-bounce);
+}
+
+/* Content fade in animation */
+@keyframes contentFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-content-in {
+  animation: contentFadeIn 0.2s ease-out forwards;
+}
+
+/* Smooth page enter */
+@keyframes pageEnter {
+  from {
+    opacity: 0.7;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-page-enter {
+  animation: pageEnter 0.15s ease-out forwards;
+}
+
+/* Smooth content fade in */
+@keyframes contentEnter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-content-enter {
+  animation: contentEnter 0.25s ease-out forwards;
+}
+
+/* Smooth fade in */
+@keyframes fadeIn {
+  from {
+    opacity: 0.6;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Staggered animation for lists */
+@keyframes staggerFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-stagger > * {
+  animation: staggerFadeIn 0.25s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.animate-stagger > *:nth-child(2) { animation-delay: 30ms; }
+.animate-stagger > *:nth-child(3) { animation-delay: 60ms; }
+.animate-stagger > *:nth-child(4) { animation-delay: 90ms; }
+.animate-stagger > *:nth-child(5) { animation-delay: 120ms; }
+.animate-stagger > *:nth-child(6) { animation-delay: 150ms; }
+.animate-stagger > *:nth-child(7) { animation-delay: 180ms; }
+.animate-stagger > *:nth-child(8) { animation-delay: 210ms; }
+.animate-stagger > *:nth-child(9) { animation-delay: 240ms; }
+.animate-stagger > *:nth-child(10) { animation-delay: 270ms; }
+
+/* Pulse Animation */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--card) 25%,
+    var(--card-hover) 50%,
+    var(--card) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+}
+
+/* Scale on hover */
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out forwards;
+}
+
+/* ================================
+   INTERACTIVE STATES
+   ================================ */
+
+/* Focus Ring */
+.focus-theme:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px #ef4444;
+}
+
+.focus-theme-visible:focus-visible {
+  outline: 2px solid #ef4444;
+  outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+  background-color: #ef4444;
+  color: white;
+}
+
+/* ================================
+   RESPONSIVE UTILITIES
+   ================================ */
+
+/* Touch-friendly tap targets */
+@media (hover: none) {
+  .tap-highlight {
+    -webkit-tap-highlight-color: rgba(239, 68, 68, 0.1);
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ================================
+   PERFORMANCE OPTIMIZATIONS
+   ================================ */
+
+/* GPU acceleration for animations */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+/* Smooth scrolling on touch devices */
+.smooth-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Image loading optimization */
+img {
+  content-visibility: auto;
+}
+
+/* Contain paint for better performance */
+.contain-paint {
+  contain: paint;
+}
+
+/* Backdrop blur fallback for older browsers */
+@supports not (backdrop-filter: blur(12px)) {
+  .backdrop-blur-sm {
+    background-color: rgba(15, 15, 15, 0.95) !important;
+  }
+}
+
+/* Additional backdrop-blur support */
+.backdrop-blur-sm {
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
