@@ -172,7 +172,7 @@ export default function SettingsPage() {
             label="Sitemap"
             description="Browse all pages"
             action="link"
-            href="/sitemap"
+            href="/site-map"
           />
         </section>
       </div>
