@@ -13,18 +13,18 @@ export async function GET() {
       tablesExist: false,
     },
     environment: {
-      hasDatabaseUrl: !!process.env.DATABASE_URL,
+      hasDatabaseUrl: !!(process.env.POSTGRES_PRISMA_URL || process.env.DATABASE_URL),
       nodeEnv: process.env.NODE_ENV,
     },
   };
 
   // Check if DATABASE_URL is configured
-  if (!process.env.DATABASE_URL) {
+  if (!process.env.POSTGRES_PRISMA_URL && !process.env.DATABASE_URL) {
     health.status = 'error';
-    health.database.error = 'DATABASE_URL not configured';
+    health.database.error = 'Database URL not configured (need POSTGRES_PRISMA_URL or DATABASE_URL)';
     return NextResponse.json({
       ...health,
-      hint: 'Set DATABASE_URL in Vercel environment variables.',
+      hint: 'Set POSTGRES_PRISMA_URL or DATABASE_URL in Vercel environment variables.',
     }, { status: 500 });
   }
 

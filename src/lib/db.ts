@@ -4,12 +4,14 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
-// Create Prisma client with explicit datasource URL for Vercel
+// Create Prisma client with explicit datasource URL for Vercel + Neon
+// Prefer POSTGRES_PRISMA_URL (Neon's Prisma-optimized URL without channel_binding)
+// Fall back to DATABASE_URL if POSTGRES_PRISMA_URL is not available
 function createPrismaClient(): PrismaClient {
-  const databaseUrl = process.env.DATABASE_URL
+  const databaseUrl = process.env.POSTGRES_PRISMA_URL || process.env.DATABASE_URL
 
   if (!databaseUrl) {
-    console.error('DATABASE_URL is not set!')
+    console.error('POSTGRES_PRISMA_URL or DATABASE_URL is not set!')
   }
 
   return new PrismaClient({
@@ -28,8 +30,9 @@ if (process.env.NODE_ENV !== 'production') {
 // Helper to check database connection
 export async function checkDatabaseConnection(): Promise<{ connected: boolean; error?: string }> {
   try {
-    if (!process.env.DATABASE_URL) {
-      return { connected: false, error: 'DATABASE_URL not configured' }
+    const dbUrl = process.env.POSTGRES_PRISMA_URL || process.env.DATABASE_URL;
+    if (!dbUrl) {
+      return { connected: false, error: 'Database URL not configured (need POSTGRES_PRISMA_URL or DATABASE_URL)' }
     }
     await db.$queryRaw`SELECT 1`
     return { connected: true }

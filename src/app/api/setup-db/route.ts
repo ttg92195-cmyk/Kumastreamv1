@@ -38,11 +38,11 @@ export async function GET(request: Request) {
   const errors: string[] = [];
 
   // Check if DATABASE_URL is configured
-  if (!process.env.DATABASE_URL) {
+  if (!process.env.POSTGRES_PRISMA_URL && !process.env.DATABASE_URL) {
     return NextResponse.json({
       success: false,
-      error: 'DATABASE_URL not configured',
-      hint: 'Set DATABASE_URL in Vercel environment variables.',
+      error: 'Database URL not configured',
+      hint: 'Set POSTGRES_PRISMA_URL or DATABASE_URL in Vercel environment variables.',
     }, { status: 500 });
   }
 
