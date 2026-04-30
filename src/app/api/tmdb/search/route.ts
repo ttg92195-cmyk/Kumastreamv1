@@ -1,8 +1,10 @@
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
+import { sanitizeError } from '@/lib/auth';
 
-const TMDB_API_KEY = process.env.TMDB_API_KEY || '2e928cd76f7f5ae46f6e022f5dcc2612';
+const TMDB_API_KEY = process.env.TMDB_API_KEY;
+if (!TMDB_API_KEY) throw new Error('TMDB_API_KEY environment variable is not set');
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
 export async function GET(request: Request) {
@@ -267,8 +269,7 @@ export async function GET(request: Request) {
   } catch (error: any) {
     console.error('TMDB search error:', error);
     return NextResponse.json({ 
-      error: 'Failed to fetch from TMDB',
-      details: error?.message || 'Unknown error',
+      error: sanitizeError(error, 'Failed to fetch from TMDB'),
     }, { status: 500 });
   }
 }

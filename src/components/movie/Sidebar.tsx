@@ -216,7 +216,7 @@ export function Sidebar() {
         {/* Footer */}
         <div className="p-4 border-t border-gray-800 mt-4">
           <p className="text-gray-500 text-xs text-center">
-            © 2024 CINE STREAM
+            © {new Date().getFullYear()} CINE STREAM
           </p>
         </div>
       </aside>

@@ -3,26 +3,36 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import bcrypt from 'bcryptjs';
+import { sanitizeError } from '@/lib/auth';
 
 // Execute a single SQL statement
 async function executeSQL(sql: string, description: string) {
   try {
     await db.$executeRawUnsafe(sql);
-    console.log(`✓ ${description}`);
+    console.log(`[setup] ${description}`);
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
     // Ignore "already exists" errors
-    if (error.message?.includes('already exists') || error.message?.includes('duplicate')) {
-      console.log(`→ ${description} (already exists)`);
+    if (message.includes('already exists') || message.includes('duplicate')) {
+      console.log(`[setup] ${description} (already exists)`);
       return { success: true, skipped: true };
     }
-    console.error(`✗ ${description}:`, error.message);
-    return { success: false, error: error.message };
+    console.error(`[setup] FAILED ${description}:`, message);
+    return { success: false, error: message };
   }
 }
 
-export async function GET() {
-  console.log('=== Database Setup Started ===');
+export async function GET(request: Request) {
+  // Require setup secret for authentication
+  const { searchParams } = new URL(request.url);
+  const setupSecret = searchParams.get('secret');
+
+  if (!setupSecret || setupSecret !== process.env.SETUP_SECRET) {
+    return NextResponse.json({ error: 'Unauthorized. Provide ?secret=SETUP_SECRET' }, { status: 401 });
+  }
+
+  console.log('[setup] Database Setup Started');
 
   const results: string[] = [];
   const errors: string[] = [];
@@ -37,7 +47,7 @@ export async function GET() {
   }
 
   try {
-    console.log('Connecting to database...');
+    console.log('[setup] Connecting to database...');
     await db.$connect();
     results.push('Connected to database');
 
@@ -236,7 +246,7 @@ export async function GET() {
     }
     results.push('Indexes created');
 
-    // Create foreign keys (only if they don't exist)
+    // Create foreign keys
     const foreignKeys = [
       `DO $$ BEGIN ALTER TABLE "Episode" ADD CONSTRAINT "Episode_seriesId_fkey" FOREIGN KEY ("seriesId") REFERENCES "Series"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN OTHERS THEN NULL; END $$`,
       `DO $$ BEGIN ALTER TABLE "Cast" ADD CONSTRAINT "Cast_movieId_fkey" FOREIGN KEY ("movieId") REFERENCES "Movie"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN OTHERS THEN NULL; END $$`,
@@ -267,29 +277,39 @@ export async function GET() {
       'Add server column to DownloadLink'
     );
 
-    // Create admin user
-    try {
-      const hashedPassword = await bcrypt.hash('Admin8676', 10);
+    // Create admin user using parameterized query (fixes SQL injection)
+    const adminUsername = process.env.ADMIN_USERNAME || 'Admin8676';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'Admin8676';
 
-      // Check if user exists first
-      const existingUsers = await db.$queryRaw`SELECT * FROM "User" WHERE username = 'Admin8676'`;
+    try {
+      const hashedPassword = await bcrypt.hash(adminPassword, 10);
+
+      // Check if user exists first using tagged template (safe from injection)
+      const existingUsers = await db.$queryRaw`SELECT * FROM "User" WHERE username = ${adminUsername}`;
 
       if (!Array.isArray(existingUsers) || existingUsers.length === 0) {
-        await db.$executeRawUnsafe(`
-          INSERT INTO "User" (id, username, password, "isAdmin", "createdAt", "updatedAt")
-          VALUES ('admin-001', 'Admin8676', '${hashedPassword}', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-        `);
-        results.push('Admin user created: Admin8676 / Admin8676');
-        console.log('Admin user created');
+        // Use Prisma client instead of raw SQL (safe from injection)
+        await db.user.create({
+          data: {
+            id: 'admin-001',
+            username: adminUsername,
+            password: hashedPassword,
+            isAdmin: true,
+            updatedAt: new Date(),
+          }
+        });
+        results.push('Admin user created');
+        console.log('[setup] Admin user created');
       } else {
         results.push('Admin user already exists');
-        console.log('Admin user already exists');
+        console.log('[setup] Admin user already exists');
       }
-    } catch (userError: any) {
-      results.push(`Admin user: ${userError.message}`);
+    } catch (userError: unknown) {
+      const msg = userError instanceof Error ? userError.message : String(userError);
+      results.push(`Admin user: ${msg}`);
     }
 
-    console.log('=== Database Setup Complete ===');
+    console.log('[setup] Database Setup Complete');
 
     return NextResponse.json({
       success: true,
@@ -297,23 +317,19 @@ export async function GET() {
       results,
       errors: errors.length > 0 ? errors : undefined,
       tables: ['User', 'Movie', 'Series', 'Episode', 'Cast', 'DownloadLink', 'Genre', 'Bookmark', 'RecentView', 'Collection', 'Tag'],
-      admin: {
-        username: 'Admin8676',
-        password: 'Admin8676'
-      },
       nextSteps: [
         '1. Visit /api/health to verify tables exist',
         '2. Visit /admin/tmdb to start importing movies/series'
       ]
     });
 
-  } catch (error: any) {
-    console.error('Database setup error:', error);
+  } catch (error: unknown) {
+    console.error('[setup] Database setup error:', error);
 
     return NextResponse.json({
       success: false,
       error: 'Failed to setup database',
-      details: error?.message || 'Unknown error',
+      details: sanitizeError(error),
       results,
       errors,
     }, { status: 500 });

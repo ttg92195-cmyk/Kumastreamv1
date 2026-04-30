@@ -981,7 +981,10 @@ export default function MovieDetailPage() {
 }
 
 function formatDuration(minutes: number): string {
+  if (!minutes || minutes <= 0) return '0 min';
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
-  return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${0}`;
+  if (hours > 0 && mins > 0) return `${hours}h ${mins}m`;
+  if (hours > 0) return `${hours}h`;
+  return `${mins} min`;
 }

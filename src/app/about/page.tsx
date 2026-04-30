@@ -96,7 +96,7 @@ export default function AboutPage() {
 
         {/* Footer */}
         <div className="text-center pt-6">
-          <p className="text-gray-500 text-xs">© 2024 KUMASTREAM. All rights reserved.</p>
+          <p className="text-gray-500 text-xs">© {new Date().getFullYear()} KUMASTREAM. All rights reserved.</p>
         </div>
       </div>
     </div>

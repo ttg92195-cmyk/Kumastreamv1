@@ -1,9 +1,11 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { db } from '@/lib/db';
+import { validateAdminAuth, sanitizeError } from '@/lib/auth';
 
-const TMDB_API_KEY = process.env.TMDB_API_KEY || '2e928cd76f7f5ae46f6e022f5dcc2612';
+const TMDB_API_KEY = process.env.TMDB_API_KEY;
+if (!TMDB_API_KEY) throw new Error('TMDB_API_KEY environment variable is not set');
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
 // Placeholder image
@@ -13,6 +15,10 @@ export async function POST(request: Request) {
   const startTime = Date.now();
   
   try {
+    // Auth check
+    const authResult = validateAdminAuth(request as NextRequest);
+    if (!authResult.authorized) return authResult.response!;
+
     // First, check database connection
     console.log('=== TMDB Import Started ===');
     console.log('Checking database connection...');
@@ -24,9 +30,7 @@ export async function POST(request: Request) {
       console.error('Database connection failed:', dbConnectError);
       return NextResponse.json({
         success: false,
-        error: 'Database connection failed',
-        details: dbConnectError?.message || 'Cannot connect to database. Check if Neon project is active.',
-        hint: 'Go to Neon Console and check if your project is SUSPENDED. Resume it if needed.',
+        error: sanitizeError(dbConnectError, 'Database connection failed'),
       }, { status: 500 });
     }
 
@@ -249,9 +253,7 @@ export async function POST(request: Request) {
     
     return NextResponse.json({
       success: false,
-      error: 'Failed to import items',
-      details: error?.message || 'Unknown error',
-      hint: 'Check if your Neon database is active and not SUSPENDED.',
+      error: sanitizeError(error, 'Failed to import items'),
     }, { status: 500 });
   }
 }
@@ -288,9 +290,7 @@ export async function GET() {
   } catch (error: any) {
     console.error('Error fetching TMDB items:', error);
     return NextResponse.json({
-      error: 'Failed to fetch TMDB items',
-      details: error?.message || 'Unknown error',
-      hint: 'Check if your Neon database is active.',
+      error: sanitizeError(error, 'Failed to fetch TMDB items'),
     }, { status: 500 });
   }
 }
@@ -298,6 +298,10 @@ export async function GET() {
 // DELETE an item
 export async function DELETE(request: Request) {
   try {
+    // Auth check
+    const authResult = validateAdminAuth(request as NextRequest);
+    if (!authResult.authorized) return authResult.response!;
+
     const body = await request.json();
     const { id, type } = body;
 
@@ -315,8 +319,7 @@ export async function DELETE(request: Request) {
   } catch (error: any) {
     console.error('Delete error:', error);
     return NextResponse.json({
-      error: 'Failed to delete item',
-      details: error?.message || 'Unknown error',
+      error: sanitizeError(error, 'Failed to delete item'),
     }, { status: 500 });
   }
 }
@@ -324,6 +327,10 @@ export async function DELETE(request: Request) {
 // PUT - Check which TMDB IDs are already imported
 export async function PUT(request: Request) {
   try {
+    // Auth check
+    const authResult = validateAdminAuth(request as NextRequest);
+    if (!authResult.authorized) return authResult.response!;
+
     const body = await request.json();
     const { tmdbIds, type } = body;
 
@@ -351,8 +358,7 @@ export async function PUT(request: Request) {
   } catch (error: any) {
     console.error('Check imported error:', error);
     return NextResponse.json({
-      error: 'Failed to check imported items',
-      details: error?.message || 'Unknown error',
+      error: sanitizeError(error, 'Failed to check imported items'),
     }, { status: 500 });
   }
 }

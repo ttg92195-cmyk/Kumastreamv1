@@ -28,7 +28,7 @@ export function BottomNav() {
       <div className="relative flex items-center h-16 max-w-lg mx-auto safe-area-bottom">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = item.href === '/' ? pathname === '/' : pathname === item.href;
+          const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
 
           return (
             <Link

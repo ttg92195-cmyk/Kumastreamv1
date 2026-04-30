@@ -44,6 +44,7 @@ interface AdminUser {
   id: string;
   username: string;
   isAdmin: boolean;
+  token?: string; // Auth token for API calls
 }
 
 interface AppState {

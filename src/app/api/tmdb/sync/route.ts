@@ -1,10 +1,12 @@
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutes for Vercel
 
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { db } from '@/lib/db';
+import { validateAdminAuth, sanitizeError } from '@/lib/auth';
 
-const TMDB_API_KEY = process.env.TMDB_API_KEY || '2e928cd76f7f5ae46f6e022f5dcc2612';
+const TMDB_API_KEY = process.env.TMDB_API_KEY;
+if (!TMDB_API_KEY) throw new Error('TMDB_API_KEY environment variable is not set');
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
 // Placeholder image
@@ -137,8 +139,7 @@ export async function GET(request: Request) {
     console.error('Sync status error:', error);
     return NextResponse.json({
       success: false,
-      error: 'Failed to get sync status',
-      details: error?.message
+      error: sanitizeError(error, 'Failed to get sync status'),
     }, { status: 500 });
   }
 }
@@ -151,6 +152,10 @@ export async function POST(request: Request) {
   console.log('=== TMDB Sync Started ===');
 
   try {
+    // Auth check
+    const authResult = validateAdminAuth(request as NextRequest);
+    if (!authResult.authorized) return authResult.response!;
+
     await db.$connect();
 
     const body = await request.json().catch(() => ({}));
@@ -442,8 +447,7 @@ export async function POST(request: Request) {
     console.error('Sync error:', error);
     return NextResponse.json({
       success: false,
-      error: 'Sync failed',
-      details: error?.message
+      error: sanitizeError(error, 'Sync failed'),
     }, { status: 500 });
   }
 }

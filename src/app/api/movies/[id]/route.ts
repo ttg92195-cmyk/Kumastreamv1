@@ -1,7 +1,8 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { db } from '@/lib/db';
+import { validateAdminAuth, isValidDownloadUrl, sanitizeError } from '@/lib/auth';
 
 // Placeholder image for missing posters
 const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAwIiBoZWlnaHQ9Ijc1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjIyIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM2NjYiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
@@ -127,7 +128,7 @@ export async function GET(
   } catch (error: any) {
     console.error('Error fetching movie:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch movie', details: error?.message || 'Unknown error' },
+      { error: sanitizeError(error, 'Failed to fetch movie') },
       { status: 500 }
     );
   }
@@ -140,24 +141,20 @@ export async function DELETE(
   try {
     const { id } = await params;
 
+    const authResult = validateAdminAuth(request as NextRequest);
+    if (!authResult.authorized) return authResult.response!;
+
     if (!id) {
       return NextResponse.json({ error: 'Movie ID is required' }, { status: 400 });
     }
 
     console.log('Deleting movie with ID:', id);
 
-    // First delete related records
-    await db.downloadLink.deleteMany({
-      where: { movieId: id },
-    });
-
-    await db.cast.deleteMany({
-      where: { movieId: id },
-    });
-
-    // Then delete the movie
-    await db.movie.delete({
-      where: { id },
+    // Delete related records and movie in a transaction
+    await db.$transaction(async (tx) => {
+      await tx.downloadLink.deleteMany({ where: { movieId: id } });
+      await tx.cast.deleteMany({ where: { movieId: id } });
+      await tx.movie.delete({ where: { id } });
     });
 
     console.log('Movie deleted successfully:', id);
@@ -172,7 +169,7 @@ export async function DELETE(
     }
     
     return NextResponse.json(
-      { error: 'Failed to delete movie', details: error?.message || 'Unknown error' },
+      { error: sanitizeError(error, 'Failed to delete movie') },
       { status: 500 }
     );
   }
@@ -184,6 +181,10 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
+
+    const authResult = validateAdminAuth(request as NextRequest);
+    if (!authResult.authorized) return authResult.response!;
+
     const body = await request.json();
 
     if (!id) {
@@ -227,7 +228,7 @@ export async function PUT(
             create: body.downloadLinks.map((link: any) => ({
               server: link.server || 'Server 1',
               quality: link.quality || '',
-              url: link.url || '',
+              url: isValidDownloadUrl(link.url) ? link.url : '',
               size: link.size || null,
             })),
           } : undefined,
@@ -252,7 +253,7 @@ export async function PUT(
     }
 
     return NextResponse.json(
-      { error: 'Failed to update movie', details: error?.message || 'Unknown error' },
+      { error: sanitizeError(error, 'Failed to update movie') },
       { status: 500 }
     );
   }

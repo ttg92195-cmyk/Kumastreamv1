@@ -1,7 +1,8 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { db } from '@/lib/db';
+import { validateAdminAuth, isValidDownloadUrl, sanitizeError } from '@/lib/auth';
 
 // GET single episode
 export async function GET(
@@ -30,7 +31,7 @@ export async function GET(
   } catch (error: any) {
     console.error('Error fetching episode:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch episode', details: error?.message || 'Unknown error' },
+      { error: sanitizeError(error, 'Failed to fetch episode') },
       { status: 500 }
     );
   }
@@ -43,6 +44,10 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
+
+    const authResult = validateAdminAuth(request as NextRequest);
+    if (!authResult.authorized) return authResult.response!;
+
     const body = await request.json();
 
     if (!id) {
@@ -86,7 +91,7 @@ export async function PUT(
               episodeId: id,
               server: link.server || 'Server 1',
               quality: link.quality || '',
-              url: link.url || '',
+              url: isValidDownloadUrl(link.url) ? link.url : '',
               size: link.size || null,
             },
           });
@@ -129,7 +134,7 @@ export async function PUT(
   } catch (error: any) {
     console.error('Error updating episode:', error);
     return NextResponse.json(
-      { error: 'Failed to update episode', details: error?.message || 'Unknown error' },
+      { error: sanitizeError(error, 'Failed to update episode') },
       { status: 500 }
     );
   }
@@ -143,18 +148,17 @@ export async function DELETE(
   try {
     const { id } = await params;
 
+    const authResult = validateAdminAuth(request as NextRequest);
+    if (!authResult.authorized) return authResult.response!;
+
     if (!id) {
       return NextResponse.json({ error: 'Episode ID is required' }, { status: 400 });
     }
 
-    // Delete download links first
-    await db.downloadLink.deleteMany({
-      where: { episodeId: id },
-    });
-
-    // Delete episode
-    await db.episode.delete({
-      where: { id },
+    // Delete download links and episode in a transaction
+    await db.$transaction(async (tx) => {
+      await tx.downloadLink.deleteMany({ where: { episodeId: id } });
+      await tx.episode.delete({ where: { id } });
     });
 
     return NextResponse.json({ success: true, message: 'Episode deleted successfully' });
@@ -166,7 +170,7 @@ export async function DELETE(
     }
 
     return NextResponse.json(
-      { error: 'Failed to delete episode', details: error?.message || 'Unknown error' },
+      { error: sanitizeError(error, 'Failed to delete episode') },
       { status: 500 }
     );
   }
