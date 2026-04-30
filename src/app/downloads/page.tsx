@@ -37,11 +37,13 @@ export default function DownloadsPage() {
               </div>
             </div>
             <Switch
-              checked={_hasHydrated ? showAllDownloadLinks : false}
-              onCheckedChange={setShowAllDownloadLinks}
-              className="scale-110"
-            />
-          </div>
+  id="download-toggle"
+  disabled={!_hasHydrated} // Hydrate မဖြစ်သေးရင် နှိပ်လို့မရအောင် ပိတ်ထားမယ်
+  checked={_hasHydrated && showAllDownloadLinks}
+  onCheckedChange={setShowAllDownloadLinks}
+  className="scale-110"
+/>
+            
 
           {/* Status Message */}
           <div 
