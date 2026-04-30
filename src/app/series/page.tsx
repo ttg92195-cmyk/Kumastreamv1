@@ -3,11 +3,11 @@
 import { Suspense } from 'react';
 import SeriesContent from './SeriesContent';
 
-// Simple background fallback for Suspense
-// The actual skeleton is handled inside SeriesContent during data loading
+// Minimal fallback - let SeriesContent handle its own loading state
+// Suspense is only needed for useSearchParams() in Next.js App Router
 export default function SeriesPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#0f0f0f]" />}>
+    <Suspense fallback={null}>
       <SeriesContent />
     </Suspense>
   );
