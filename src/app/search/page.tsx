@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Header } from '@/components/movie/Header';
 import { MovieCard } from '@/components/movie/MovieCard';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Film, Tv } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const ITEMS_PER_PAGE = 30;
@@ -121,7 +121,6 @@ function SearchContent() {
         <button
           onClick={() => goToPage(currentPage - 1)}
           disabled={currentPage === 1}
-          aria-label="Previous page"
           className="p-2 rounded-lg bg-gray-700 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600 transition-colors"
         >
           <ChevronLeft className="w-5 h-5" />
@@ -149,7 +148,6 @@ function SearchContent() {
         <button
           onClick={() => goToPage(currentPage + 1)}
           disabled={currentPage === totalPages}
-          aria-label="Next page"
           className="p-2 rounded-lg bg-gray-700 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600 transition-colors"
         >
           <ChevronRight className="w-5 h-5" />
@@ -168,7 +166,6 @@ function SearchContent() {
 
       <div className="p-4">
         {loading ? (
-          /* Grid Skeleton - Poster + Title + Year only */
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
             {[...Array(30)].map((_, i) => (
               <div key={i}>
@@ -180,7 +177,6 @@ function SearchContent() {
           </div>
         ) : (
           <div className="space-y-4">
-            <h1 className="sr-only">Search Results</h1>
             {/* Results count */}
             {combinedResults.length > 0 && (
               <div className="flex items-center justify-between">
@@ -239,11 +235,10 @@ function SearchContent() {
   );
 }
 
-// Simple background fallback for Suspense
-// The actual skeleton is handled inside SearchContent during data loading
+// Minimal fallback - let SearchContent handle its own loading state
 export default function SearchPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#0f0f0f]" />}>
+    <Suspense fallback={null}>
       <SearchContent />
     </Suspense>
   );
