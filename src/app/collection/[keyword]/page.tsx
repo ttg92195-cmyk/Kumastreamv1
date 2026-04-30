@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Film, Tv, Tag, FolderOpen, Grid3X3, Loader2, X, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { ArrowLeft, Film, Tv, Search, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { MovieCard } from '@/components/movie/MovieCard';
 import { cn } from '@/lib/utils';
 
@@ -215,7 +215,6 @@ function CollectionContent() {
         <button 
           onClick={() => goToPage(currentPage - 1)} 
           disabled={currentPage === 1}
-          aria-label="Previous page"
           className="p-2 rounded-lg bg-gray-700 text-white disabled:opacity-40 hover:bg-gray-600"
         >
           <ChevronLeft className="w-5 h-5" />
@@ -235,7 +234,6 @@ function CollectionContent() {
         <button 
           onClick={() => goToPage(currentPage + 1)} 
           disabled={currentPage === totalPages}
-          aria-label="Next page"
           className="p-2 rounded-lg bg-gray-700 text-white disabled:opacity-40 hover:bg-gray-600"
         >
           <ChevronRight className="w-5 h-5" />
@@ -253,7 +251,6 @@ function CollectionContent() {
         <div className="flex items-center gap-4 p-4">
           <button
             onClick={() => router.back()}
-            aria-label="Go back"
             className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-white hover:bg-gray-700 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -276,11 +273,8 @@ function CollectionContent() {
           <div className="grid grid-cols-3 gap-3">
             {[...Array(30)].map((_, i) => (
               <div key={i}>
-                {/* Poster Skeleton */}
                 <div className="aspect-[2/3] bg-gray-800 rounded-md animate-pulse" />
-                {/* Title Skeleton */}
                 <div className="mt-1.5 h-3 bg-gray-800 rounded animate-pulse w-4/5" />
-                {/* Year Skeleton */}
                 <div className="mt-1 h-2.5 bg-gray-800 rounded animate-pulse w-1/3" />
               </div>
             ))}
@@ -327,11 +321,30 @@ function CollectionContent() {
   );
 }
 
-// Simple background fallback for Suspense
-// The actual skeleton is handled inside CollectionContent during data loading
 export default function CollectionPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#0f0f0f]" />}>
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#0f0f0f] pb-20">
+        <div className="sticky top-0 z-20 bg-[#0f0f0f] border-b border-gray-800 p-4">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-gray-800 rounded-full animate-pulse" />
+            <div className="flex-1 space-y-2">
+              <div className="h-5 w-32 bg-gray-800 rounded animate-pulse" />
+              <div className="h-4 w-24 bg-gray-800 rounded animate-pulse" />
+            </div>
+          </div>
+        </div>
+        <div className="p-4 grid grid-cols-3 gap-3">
+          {[...Array(30)].map((_, i) => (
+            <div key={i}>
+              <div className="aspect-[2/3] bg-gray-800 rounded-md animate-pulse" />
+              <div className="mt-1.5 h-3 bg-gray-800 rounded animate-pulse w-4/5" />
+              <div className="mt-1 h-2.5 bg-gray-800 rounded animate-pulse w-1/3" />
+            </div>
+          ))}
+        </div>
+      </div>
+    }>
       <CollectionContent />
     </Suspense>
   );
