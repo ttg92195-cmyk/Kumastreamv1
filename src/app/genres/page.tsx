@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Film, Tv, Tag, FolderOpen, Grid3X3, Loader2, X, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { ArrowLeft, Film, Tv, Tag, FolderOpen, Grid3X3, Loader2, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -103,7 +103,7 @@ function ContentCard({ id, title, year, poster, rating, quality, type }: {
       </div>
       <div className="mt-1.5 px-0.5">
         <h3 className="text-white text-xs font-medium line-clamp-1 leading-tight">{title}</h3>
-        <p className="text-gray-500 text-xs mt-0.5">{year}</p>
+        <p className="text-gray-500 text-[10px] mt-0.5">{year}</p>
       </div>
     </Link>
   );
@@ -253,7 +253,6 @@ function GenresContent() {
         <button 
           onClick={() => goToPage(page - 1)} 
           disabled={page === 1}
-          aria-label="Previous page"
           className="p-2 rounded-lg bg-gray-700 text-white disabled:opacity-40 hover:bg-gray-600"
         >
           <ChevronLeft className="w-5 h-5" />
@@ -273,7 +272,6 @@ function GenresContent() {
         <button 
           onClick={() => goToPage(page + 1)} 
           disabled={page === totalPages}
-          aria-label="Next page"
           className="p-2 rounded-lg bg-gray-700 text-white disabled:opacity-40 hover:bg-gray-600"
         >
           <ChevronRight className="w-5 h-5" />
@@ -305,7 +303,7 @@ function GenresContent() {
             {tag && !isShowTags && <Tag className="w-4 h-4" />}
             {collection && !isShowCollections && <FolderOpen className="w-4 h-4" />}
             <span>{(tag && !isShowTags) ? tag : (collection && !isShowCollections) ? collection : ''}</span>
-            <button onClick={clearFilters} aria-label="Remove filter" className="ml-1 hover:bg-white/20 rounded-full p-0.5">
+            <button onClick={clearFilters} className="ml-1 hover:bg-white/20 rounded-full p-0.5">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -584,17 +582,10 @@ function GenresHeader() {
   return (
     <div className="sticky top-0 z-20 bg-[#0f0f0f] border-b border-gray-800">
       <div className="flex items-center gap-4 p-4">
-        <button onClick={() => router.back()} aria-label="Go back" className="text-red-500">
+        <button onClick={() => router.back()} className="text-red-500">
           <ArrowLeft className="w-6 h-6" />
         </button>
-        <h1 className="text-white font-bold text-lg flex-1">{title}</h1>
-        <Link 
-          href="/search" 
-          aria-label="Search content"
-          className="p-2 rounded-lg bg-gray-800 text-gray-300 hover:text-white hover:bg-gray-700 transition-colors"
-        >
-          <Search className="w-5 h-5" />
-        </Link>
+        <h1 className="text-white font-bold text-lg">{title}</h1>
       </div>
     </div>
   );
@@ -603,9 +594,14 @@ function GenresHeader() {
 export default function GenresPage() {
   return (
     <div className="min-h-screen bg-[#0f0f0f] pb-20">
-      {/* Header - No skeleton, just background */}
+      {/* Header */}
       <Suspense fallback={
-        <div className="sticky top-0 z-20 bg-[#0f0f0f] border-b border-gray-800 h-14" />
+        <div className="sticky top-0 z-20 bg-[#0f0f0f] border-b border-gray-800">
+          <div className="flex items-center gap-4 p-4">
+            <div className="w-6 h-6 bg-gray-800 rounded animate-pulse" />
+            <div className="h-5 w-24 bg-gray-800 rounded animate-pulse" />
+          </div>
+        </div>
       }>
         <GenresHeader />
       </Suspense>
