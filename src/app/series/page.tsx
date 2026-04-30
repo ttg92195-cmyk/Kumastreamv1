@@ -2,12 +2,13 @@
 
 import { Suspense } from 'react';
 import SeriesContent from './SeriesContent';
+import { PageSkeleton } from '@/components/skeletons/PageSkeleton';
 
-// Minimal fallback - let SeriesContent handle its own loading state
-// Suspense is only needed for useSearchParams() in Next.js App Router
+// PageSkeleton provides immediate visual feedback while Suspense resolves
+// This prevents the black flash when useSearchParams() suspends
 export default function SeriesPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <SeriesContent />
     </Suspense>
   );

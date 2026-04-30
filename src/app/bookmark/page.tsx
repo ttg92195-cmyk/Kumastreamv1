@@ -7,6 +7,7 @@ import { MovieCard } from '@/components/movie/MovieCard';
 import { useAppStore } from '@/store/useAppStore';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { BookmarkSkeleton } from '@/components/skeletons/PageSkeleton';
 
 const ITEMS_PER_PAGE = 30;
 
@@ -146,7 +147,7 @@ function BookmarkContent() {
 
 export default function BookmarkPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<BookmarkSkeleton />}>
       <BookmarkContent />
     </Suspense>
   );

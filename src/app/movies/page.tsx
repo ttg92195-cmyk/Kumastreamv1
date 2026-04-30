@@ -2,12 +2,13 @@
 
 import { Suspense } from 'react';
 import MoviesContent from './MoviesContent';
+import { PageSkeleton } from '@/components/skeletons/PageSkeleton';
 
-// Minimal fallback - let MoviesContent handle its own loading state
-// Suspense is only needed for useSearchParams() in Next.js App Router
+// PageSkeleton provides immediate visual feedback while Suspense resolves
+// This prevents the black flash when useSearchParams() suspends
 export default function MoviesPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <MoviesContent />
     </Suspense>
   );
