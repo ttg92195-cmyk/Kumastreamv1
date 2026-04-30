@@ -7,9 +7,28 @@ import { MovieCard } from '@/components/movie/MovieCard';
 import { useAppStore } from '@/store/useAppStore';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { BookmarkSkeleton } from '@/components/skeletons/PageSkeleton';
 
 const ITEMS_PER_PAGE = 30;
+
+// Simple loading skeleton - only Poster, Title, Year
+function BookmarkLoadingSkeleton() {
+  return (
+    <div className="min-h-screen bg-[#0f0f0f] pb-20 p-4">
+      <div className="grid grid-cols-3 gap-2">
+        {[...Array(12)].map((_, i) => (
+          <div key={i}>
+            {/* Poster Skeleton */}
+            <div className="aspect-[2/3] bg-gray-800 rounded-md animate-pulse" />
+            {/* Title Skeleton */}
+            <div className="mt-1.5 h-3 bg-gray-800 rounded animate-pulse w-4/5" />
+            {/* Year Skeleton */}
+            <div className="mt-1 h-2.5 bg-gray-800 rounded animate-pulse w-1/3" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function BookmarkContent() {
   const { bookmarks } = useAppStore();
@@ -145,9 +164,11 @@ function BookmarkContent() {
   );
 }
 
+// Simple background fallback for Suspense
+// BookmarkContent doesn't have loading state, so we use a skeleton here
 export default function BookmarkPage() {
   return (
-    <Suspense fallback={<BookmarkSkeleton />}>
+    <Suspense fallback={<BookmarkLoadingSkeleton />}>
       <BookmarkContent />
     </Suspense>
   );

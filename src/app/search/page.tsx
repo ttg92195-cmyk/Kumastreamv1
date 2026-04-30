@@ -6,7 +6,6 @@ import { Header } from '@/components/movie/Header';
 import { MovieCard } from '@/components/movie/MovieCard';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { SearchSkeleton } from '@/components/skeletons/PageSkeleton';
 
 const ITEMS_PER_PAGE = 30;
 
@@ -240,10 +239,11 @@ function SearchContent() {
   );
 }
 
-// SearchSkeleton provides immediate visual feedback while Suspense resolves
+// Simple background fallback for Suspense
+// The actual skeleton is handled inside SearchContent during data loading
 export default function SearchPage() {
   return (
-    <Suspense fallback={<SearchSkeleton />}>
+    <Suspense fallback={<div className="min-h-screen bg-[#0f0f0f]" />}>
       <SearchContent />
     </Suspense>
   );

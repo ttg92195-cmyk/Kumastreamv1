@@ -2,10 +2,9 @@
 
 import { Suspense, useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Film, Tv, Search, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { ArrowLeft, Film, Tv, Tag, FolderOpen, Grid3X3, Loader2, X, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { MovieCard } from '@/components/movie/MovieCard';
 import { cn } from '@/lib/utils';
-import { CollectionSkeleton } from '@/components/skeletons/PageSkeleton';
 
 interface Movie {
   id: string;
@@ -277,8 +276,11 @@ function CollectionContent() {
           <div className="grid grid-cols-3 gap-3">
             {[...Array(30)].map((_, i) => (
               <div key={i}>
+                {/* Poster Skeleton */}
                 <div className="aspect-[2/3] bg-gray-800 rounded-md animate-pulse" />
+                {/* Title Skeleton */}
                 <div className="mt-1.5 h-3 bg-gray-800 rounded animate-pulse w-4/5" />
+                {/* Year Skeleton */}
                 <div className="mt-1 h-2.5 bg-gray-800 rounded animate-pulse w-1/3" />
               </div>
             ))}
@@ -325,9 +327,11 @@ function CollectionContent() {
   );
 }
 
+// Simple background fallback for Suspense
+// The actual skeleton is handled inside CollectionContent during data loading
 export default function CollectionPage() {
   return (
-    <Suspense fallback={<CollectionSkeleton />}>
+    <Suspense fallback={<div className="min-h-screen bg-[#0f0f0f]" />}>
       <CollectionContent />
     </Suspense>
   );
