@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Film, Tv, Search, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { MovieCard } from '@/components/movie/MovieCard';
 import { cn } from '@/lib/utils';
+import { CollectionSkeleton } from '@/components/skeletons/PageSkeleton';
 
 interface Movie {
   id: string;
@@ -326,7 +327,7 @@ function CollectionContent() {
 
 export default function CollectionPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<CollectionSkeleton />}>
       <CollectionContent />
     </Suspense>
   );
