@@ -39,7 +39,7 @@ export default function DownloadsPage() {
             <Switch
               checked={_hasHydrated ? showAllDownloadLinks : false}
               onCheckedChange={setShowAllDownloadLinks}
-              className="scale-11"
+              className="scale-110"
             />
           </div>
 
