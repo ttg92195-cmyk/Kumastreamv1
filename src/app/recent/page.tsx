@@ -10,16 +10,18 @@ import { cn } from '@/lib/utils';
 
 const ITEMS_PER_PAGE = 30;
 
-// Inline skeleton for recent page
+// Inline skeleton for recent page - Only Poster, Title, Year
 function RecentSkeleton({ count = 30 }: { count?: number }) {
   return (
     <div className="min-h-screen bg-[#0f0f0f] pb-20 p-4">
-      <div className="h-12 bg-gray-800/50 mb-4" />
       <div className="grid grid-cols-3 gap-2">
         {[...Array(count)].map((_, i) => (
           <div key={i}>
+            {/* 1. Poster Skeleton */}
             <div className="aspect-[2/3] bg-gray-800 rounded-md animate-pulse" />
+            {/* 2. Title Skeleton */}
             <div className="mt-1.5 h-3 bg-gray-800 rounded animate-pulse w-4/5" />
+            {/* 3. Year Skeleton */}
             <div className="mt-1 h-2.5 bg-gray-800 rounded animate-pulse w-1/3" />
           </div>
         ))}
