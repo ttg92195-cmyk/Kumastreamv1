@@ -36,7 +36,12 @@ export default function DownloadsPage() {
                 </p>
               </div>
             </div>
-            
+            <Switch
+              checked={_hasHydrated ? showAllDownloadLinks : false}
+              onCheckedChange={setShowAllDownloadLinks}
+              className="scale-11"
+            />
+          </div>
 
           {/* Status Message */}
           <div 
