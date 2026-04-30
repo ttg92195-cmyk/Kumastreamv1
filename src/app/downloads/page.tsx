@@ -36,19 +36,8 @@ export default function DownloadsPage() {
                 </p>
               </div>
             </div>
-            <Switch
-{_hasHydrated ? (
-  <Switch
-    id="download-toggle"
-    checked={showAllDownloadLinks}
-    onCheckedChange={setShowAllDownloadLinks}
-    className="scale-110"
-  />
-) : (
-  <div className="w-10 h-6 bg-gray-700 rounded-full animate-pulse"
-)}
             
-        
+
           {/* Status Message */}
           <div 
             className={cn(
