@@ -63,7 +63,6 @@ function RecentContent() {
         <button 
           onClick={() => goToPage(currentPage - 1)} 
           disabled={currentPage === 1}
-          aria-label="Previous page"
           className="p-2 rounded-lg bg-gray-700 text-white disabled:opacity-40 hover:bg-gray-600"
         >
           <ChevronLeft className="w-5 h-5" />
@@ -83,7 +82,6 @@ function RecentContent() {
         <button 
           onClick={() => goToPage(currentPage + 1)} 
           disabled={currentPage === totalPages}
-          aria-label="Next page"
           className="p-2 rounded-lg bg-gray-700 text-white disabled:opacity-40 hover:bg-gray-600"
         >
           <ChevronRight className="w-5 h-5" />
@@ -94,12 +92,11 @@ function RecentContent() {
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] pb-20">
-      <Header title="Recent" />
+      <Header title="Recent" showSearch={false} />
 
       <div className="p-4">
         {recents.length === 0 ? (
           <div className="text-center py-20">
-            <h1 className="text-white font-bold text-lg mb-2">Recent</h1>
             <p className="text-gray-500 mb-2">No recent views</p>
             <p className="text-gray-600 text-xs">
               Movies and series you watch will appear here
@@ -108,14 +105,12 @@ function RecentContent() {
         ) : (
           <div className="space-y-4">
             {/* Header with Clear Button */}
-            <h1 className="sr-only">Recent</h1>
             <div className="flex items-center justify-between">
               <p className="text-gray-400 text-sm">
                 {totalItems} {totalItems === 1 ? 'item' : 'items'} viewed
               </p>
               <button
                 onClick={clearRecents}
-                aria-label="Clear all recent history"
                 className="flex items-center gap-1 text-red-500 text-xs"
               >
                 <Trash2 className="w-3 h-3" />
@@ -151,30 +146,28 @@ function RecentContent() {
   );
 }
 
-// Simple loading skeleton for Suspense fallback - only Poster, Title, Year
-function RecentLoadingSkeleton() {
-  return (
-    <div className="min-h-screen bg-[#0f0f0f] pb-20 p-4">
-      <div className="grid grid-cols-3 gap-2">
-        {[...Array(30)].map((_, i) => (
-          <div key={i}>
-            {/* Poster Skeleton */}
-            <div className="aspect-[2/3] bg-gray-800 rounded-md animate-pulse" />
-            {/* Title Skeleton */}
-            <div className="mt-1.5 h-3 bg-gray-800 rounded animate-pulse w-4/5" />
-            {/* Year Skeleton */}
-            <div className="mt-1 h-2.5 bg-gray-800 rounded animate-pulse w-1/3" />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// RecentContent doesn't have loading state, so we use a skeleton here
 export default function RecentPage() {
   return (
-    <Suspense fallback={<RecentLoadingSkeleton />}>
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#0f0f0f] pb-20">
+        <Header title="Recent" showSearch={false} />
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="h-4 w-20 bg-gray-800 rounded animate-pulse" />
+            <div className="h-4 w-16 bg-gray-800 rounded animate-pulse" />
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {[...Array(30)].map((_, i) => (
+              <div key={i}>
+                <div className="aspect-[2/3] bg-gray-800 rounded-md animate-pulse" />
+                <div className="mt-1.5 h-3 bg-gray-800 rounded animate-pulse w-4/5" />
+                <div className="mt-1 h-2.5 bg-gray-800 rounded animate-pulse w-1/3" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    }>
       <RecentContent />
     </Suspense>
   );
