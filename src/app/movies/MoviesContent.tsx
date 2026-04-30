@@ -118,7 +118,8 @@ export default function MoviesContent() {
     return pages;
   }, [totalPages, currentPage]);
 
-  
+  return (
+    <div className="min-h-screen bg-[#0f0f0f] pb-20">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-[#0f0f0f]/95 backdrop-blur-sm border-b border-gray-800 p-4">
         <div className="flex items-center justify-between">
@@ -166,14 +167,10 @@ export default function MoviesContent() {
 
         {loading ? (
           <div className="grid grid-cols-4 gap-2">
-            {[...Array(20)].map((_, i) => (
+            {[...Array(12)].map((_, i) => (
               <div key={i}>
-                {/* Poster Skeleton */}
-                <div className="aspect-[2/3] bg-gray-800 rounded-md animate-pulse" />
-                {/* Title Skeleton */}
-                <div className="mt-1.5 h-3 bg-gray-800 rounded animate-pulse w-4/5" />
-                {/* Year Skeleton */}
-                <div className="mt-1 h-2.5 bg-gray-800 rounded animate-pulse w-1/3" />
+                <div className="aspect-[2/3] bg-gray-800/50 rounded-md animate-pulse" />
+                <div className="mt-1.5 h-3 bg-gray-800/50 rounded w-3/4 animate-pulse" />
               </div>
             ))}
           </div>
@@ -186,7 +183,7 @@ export default function MoviesContent() {
         ) : (
           <>
             <div className={cn(
-              "grid grid-cols-4 gap-2 transition-opacity duration-200",
+              "grid grid-cols-4 gap-2 animate-content-enter",
               isTransitioning && "opacity-50"
             )}>
               {renderedMovies}
