@@ -152,9 +152,14 @@ export async function POST(request: Request) {
   console.log('=== TMDB Sync Started ===');
 
   try {
-    // Auth check
-    const authResult = validateAdminAuth(request as NextRequest);
-    if (!authResult.authorized) return authResult.response!;
+    // Auth check - allow CRON_SECRET for Vercel cron jobs, or admin auth for manual calls
+    const cronSecret = request.headers.get('x-cron-secret') || new URL(request.url).searchParams.get('cron_secret');
+    const isCronRequest = cronSecret && cronSecret === process.env.CRON_SECRET;
+
+    if (!isCronRequest) {
+      const authResult = validateAdminAuth(request as NextRequest);
+      if (!authResult.authorized) return authResult.response!;
+    }
 
     await db.$connect();
 

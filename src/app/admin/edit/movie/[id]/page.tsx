@@ -261,9 +261,12 @@ export default function EditMoviePage() {
         downloadLinks: downloadLinks,
       };
 
+      const editHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (admin?.token) editHeaders['Authorization'] = `Bearer ${admin.token}`;
+
       const res = await fetch(`/api/movies/${movie.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: editHeaders,
         body: JSON.stringify(updateData),
       });
 

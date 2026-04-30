@@ -42,7 +42,8 @@ export default function AdminLoginPage() {
         return;
       }
 
-      setAdmin(data.user);
+      // Save user info AND token for authenticated API calls
+      setAdmin({ ...data.user, token: data.token });
       // Use replace instead of push to prevent going back to login
       router.replace('/admin/dashboard');
     } catch (err) {

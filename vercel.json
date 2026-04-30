@@ -1,11 +1,11 @@
 {
-  "buildCommand": "prisma generate && prisma db push && next build",
+  "buildCommand": "prisma generate && next build",
   "installCommand": "bun install",
   "framework": "nextjs",
   "regions": ["iad1"],
   "crons": [
     {
-      "path": "/api/tmdb/sync",
+      "path": "/api/tmdb/sync?cron_secret=${CRON_SECRET}",
       "schedule": "0 0 * * *"
     }
   ]

@@ -352,9 +352,12 @@ function DashboardContent() {
       let successCount = 0;
       let failCount = 0;
       
+      const deleteHeaders: Record<string, string> = {};
+      if (admin?.token) deleteHeaders['Authorization'] = `Bearer ${admin.token}`;
+
       for (const id of ids) {
         const endpoint = type === 'movie' ? `/api/movies/${id}` : `/api/series/${id}`;
-        const res = await fetch(endpoint, { method: 'DELETE' });
+        const res = await fetch(endpoint, { method: 'DELETE', headers: deleteHeaders });
         
         if (res.ok) {
           successCount++;
@@ -390,8 +393,11 @@ function DashboardContent() {
     
     setDeleteId(id);
     try {
+      const deleteHeaders: Record<string, string> = {};
+      if (admin?.token) deleteHeaders['Authorization'] = `Bearer ${admin.token}`;
+
       const endpoint = type === 'movie' ? `/api/movies/${id}` : `/api/series/${id}`;
-      const res = await fetch(endpoint, { method: 'DELETE' });
+      const res = await fetch(endpoint, { method: 'DELETE', headers: deleteHeaders });
       
       if (res.ok) {
         // Update local state

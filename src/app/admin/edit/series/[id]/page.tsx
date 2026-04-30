@@ -274,9 +274,12 @@ export default function EditSeriesPage() {
 
       console.log('Updating series with data:', seriesUpdateData);
 
+      const editHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (admin?.token) editHeaders['Authorization'] = `Bearer ${admin.token}`;
+
       const seriesRes = await fetch(`/api/series/${series.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: editHeaders,
         body: JSON.stringify(seriesUpdateData),
       });
 
@@ -300,9 +303,12 @@ export default function EditSeriesPage() {
           console.log(`Updating episode ${episode.id} with ${episode.downloadLinks.length} links`);
 
           try {
+            const epHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+            if (admin?.token) epHeaders['Authorization'] = `Bearer ${admin.token}`;
+
             const epRes = await fetch(`/api/episodes/${episode.id}`, {
               method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
+              headers: epHeaders,
               body: JSON.stringify({
                 downloadLinks: episode.downloadLinks,
               }),

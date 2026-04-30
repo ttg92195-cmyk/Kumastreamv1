@@ -194,9 +194,12 @@ export default function TMDBGeneratorPage() {
       const tmdbIds = items.map(item => item.id);
       const typeParam = items[0]?.type || 'movie';
       
+      const authHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (admin?.token) authHeaders['Authorization'] = `Bearer ${admin.token}`;
+
       const response = await fetch('/api/tmdb/import', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders,
         body: JSON.stringify({ tmdbIds, type: typeParam }),
       });
       
@@ -300,9 +303,12 @@ export default function TMDBGeneratorPage() {
     const selectedItems = results.filter((r) => selectedIds.has(r.id));
     
     try {
+      const authHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (admin?.token) authHeaders['Authorization'] = `Bearer ${admin.token}`;
+
       const response = await fetch('/api/tmdb/import', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders,
         body: JSON.stringify({ items: selectedItems.map(item => ({ id: item.id, type: item.type })) }),
       });
       
@@ -432,9 +438,12 @@ export default function TMDBGeneratorPage() {
     setSyncing(true);
     setSyncResults(null);
     try {
+      const syncHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (admin?.token) syncHeaders['Authorization'] = `Bearer ${admin.token}`;
+
       const response = await fetch('/api/tmdb/sync', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: syncHeaders,
         body: JSON.stringify({ type, limit: 20, skipDescription }),
       });
       const data = await response.json();
