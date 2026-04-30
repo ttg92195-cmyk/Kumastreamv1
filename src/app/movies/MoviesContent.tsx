@@ -118,9 +118,26 @@ export default function MoviesContent() {
     return pages;
   }, [totalPages, currentPage]);
 
-  return (
-    <div className="min-h-screen bg-[#0f0f0f] pb-20">
-      
+  
+      {/* Header */}
+      <div className="sticky top-0 z-10 bg-[#0f0f0f]/95 backdrop-blur-sm border-b border-gray-800 p-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-white font-bold text-xl">
+            {activeFilter ? `${filterType}: ${activeFilter}` : 'Movies'}
+          </h1>
+          <div className="relative w-56">
+            <input 
+              type="text" 
+              placeholder="Search movies..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              autoComplete="off"
+              className="w-full bg-[#1a1a1a] text-white rounded-lg pl-10 pr-4 py-2.5 text-sm border border-gray-700 focus:border-red-500 focus:outline-none transition-colors duration-200" 
+            />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          </div>
+        </div>
+      </div>
 
       {/* Active Filter Tag */}
       {activeFilter && (
