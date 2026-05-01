@@ -146,7 +146,7 @@ const COLLECTION_NAMES: Record<string, string> = {
   'sonic': 'Sonic the Hedgehog Collection',
   "shinkai's disaster trilogy": "Shinkai's Disaster Trilogy",
   'shinkai': "Shinkai's Disaster Trilogy",
-  // Sci-Fi & Fantasy
+  // Action & Adventure (Sci-Fi & Mystery merged)
   'dune': 'Dune Collection',
   'avatar': 'Avatar Collection',
   'the hunger games': 'The Hunger Games Collection',
@@ -154,8 +154,6 @@ const COLLECTION_NAMES: Record<string, string> = {
   'the maze runner': 'The Maze Runner Collection',
   'maze runner': 'The Maze Runner Collection',
   'divergent': 'Divergent Collection',
-  'the twilight': 'The Twilight Saga',
-  'twilight': 'The Twilight Saga',
   'fantastic beasts': 'Fantastic Beasts Collection',
   'pirates of the caribbean': 'Pirates of the Caribbean',
   'jurassic': 'Jurassic Universe',
@@ -163,20 +161,24 @@ const COLLECTION_NAMES: Record<string, string> = {
   'back to the future': 'Back to the Future Collection',
   'tron': 'TRON Collection',
   'planet of the apes': 'Planet of the Apes Collection',
-  'the incredibles': 'The Incredibles Collection',
   'godzilla': 'Godzilla Collection',
-  'fifty shades': 'Fifty Shades Collection',
-  // Mystery & Drama
   'knives out': 'Knives Out Collection',
   'detective chinatown': 'Detective Chinatown',
   'now you see me': 'Now You See Me Collection',
   'the godfather': 'The Godfather Collection',
   'enola holmes': 'Enola Holmes Collection',
-  'hercule poirot': 'Hercule Poirot Collection',
-  'the princess diaries': 'The Princess Diaries Collection',
-  'searching': 'Searching Collection',
   'dragon gate posthouse': 'Dragon Gate Posthouse Collection',
   'three colors': 'Three Colors Collection',
+  // Horror & Thriller (merged Sci-Fi/Mystery thrillers)
+  'the twilight': 'The Twilight Saga',
+  'twilight': 'The Twilight Saga',
+  'fifty shades': 'Fifty Shades Collection',
+  'searching': 'Searching Collection',
+  'hercule poirot': 'Hercule Poirot Collection',
+  // Animation & Family (merged Sci-Fi)
+  'the incredibles': 'The Incredibles Collection',
+  // Comedy (merged Mystery)
+  'the princess diaries': 'The Princess Diaries Collection',
   // Misc
   'studio ghibli': 'Studio Ghibli',
   'a24': 'A24 Movies',

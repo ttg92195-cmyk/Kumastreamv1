@@ -23,12 +23,47 @@ const SERIES_TAGS = [
 // Predefined collections for Series (matches genres/page.tsx)
 const SERIES_COLLECTIONS = [
   // Universe Collections (multi-keyword search)
-  'Marvel', 'DC', 'Harry Potter', 'Star Wars', 'X-Men', 'Spider-Man',
-  'The Conjuring Universe', 'Jurassic', 'MonsterVerse', 'Despicable Me', 'Lord of the Rings',
-  'Tom & Jerry', 'James Bond', 'Fast & Furious', 'Mission Impossible',
-  'Transformers', 'Batman', 'Scooby-Doo',
-  // Normal Collections (simple keyword search)
-  'John Wick', 'Final Destination', 'Saw', 'Pirates of the Caribbean'
+  'Marvel', 'DC', 'Harry Potter', 'Star Wars',
+  'MonsterVerse', 'The Conjuring Universe', 'Godzilla x Kong',
+  'Lord of the Rings', 'Jurassic',
+  // Action & Adventure
+  'Fast & Furious', 'James Bond', 'Mission Impossible', 'John Wick',
+  'Die Hard', 'The Terminator', 'Mad Max', 'Indiana Jones',
+  'Top Gun', 'Kingsman', 'Sicario', 'Rush Hour',
+  'Rocky', 'Creed', "Ocean's", 'The Matrix',
+  'X-Men', 'Spider-Man', 'Spider-Man: Spider-Verse',
+  'Batman', 'The Dark Knight', 'Deadpool',
+  'Guardians of the Galaxy', 'Ant-Man', 'The Wolverine',
+  'Venom', 'Predator', 'Alien', 'Blade',
+  'The Mummy', 'Robert Langdon', 'Transformers', 'The Avengers',
+  'Dune', 'Avatar', 'The Hunger Games', 'The Maze Runner',
+  'Divergent', 'Back to the Future', 'TRON', 'Planet of the Apes',
+  'Godzilla', 'Pirates of the Caribbean', 'Jurassic Park',
+  'Knives Out', 'Detective Chinatown', 'Now You See Me',
+  'The Godfather', 'Enola Holmes', 'Dragon Gate Posthouse',
+  'Three Colors', 'Fantastic Beasts',
+  // Horror & Thriller
+  'Saw', 'Final Destination', 'Scream', 'Evil Dead',
+  'Annabelle', 'The Hannibal Lecter', 'Psycho', 'Terrifier',
+  'Fear Street', 'Halloween', 'Blair Witch', "Rosemary's Baby",
+  'Scary Movie', 'Hocus Pocus', 'I Know What You Did Last Summer',
+  'Texas Chainsaw Massacre', '28 Days/Weeks/Years Later',
+  'Gremlins', 'Jaws', 'X', 'The Twilight',
+  'Searching', 'Hercule Poirot', 'Fifty Shades',
+  // Comedy
+  'American Pie', 'The Hangover', 'Home Alone',
+  'Bridget Jones', 'Pitch Perfect', 'Austin Powers',
+  'High School Musical', 'Hotel Transylvania',
+  'Diary of a Wimpy Kid', 'Men in Black',
+  'Night at the Museum', 'Jumanji', 'Paddington',
+  'Ghostbusters', 'The Princess Diaries',
+  // Animation & Family
+  'Shrek', 'Toy Story', 'Cars', 'How to Train Your Dragon',
+  'Kung Fu Panda', 'Madagascar', 'The Lion King', 'Frozen',
+  'Ice Age', 'Minions', 'Despicable Me', 'Lilo & Stitch',
+  'The Little Mermaid', 'Beauty and the Beast', 'Aladdin',
+  'Tom & Jerry', 'Scooby-Doo', 'Sonic the Hedgehog',
+  "Shinkai's Disaster Trilogy", 'The Incredibles'
 ];
 
 interface DownloadLink {

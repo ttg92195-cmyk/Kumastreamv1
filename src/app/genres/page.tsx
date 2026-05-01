@@ -29,7 +29,7 @@ const SERIES_TAGS = [
   'Live Action Remake', 'Time Travel', 'Donghua', 'Superhero', 'Survival'
 ];
 
-// Categorized Collections with color styles
+// Categorized Collections with 5 main categories
 const COLLECTION_CATEGORIES = [
   {
     id: 'universe',
@@ -37,7 +37,8 @@ const COLLECTION_CATEGORIES = [
     emoji: '\u{1F310}',
     collections: [
       'Marvel', 'DC', 'Harry Potter', 'Star Wars',
-      'MonsterVerse', 'The Conjuring Universe', 'Godzilla x Kong'
+      'MonsterVerse', 'The Conjuring Universe', 'Godzilla x Kong',
+      'Lord of the Rings', 'Jurassic'
     ]
   },
   {
@@ -53,7 +54,13 @@ const COLLECTION_CATEGORIES = [
       'Batman', 'The Dark Knight', 'Deadpool',
       'Guardians of the Galaxy', 'Ant-Man', 'The Wolverine',
       'Venom', 'Predator', 'Alien', 'Blade',
-      'The Mummy', 'Robert Langdon', 'Transformers', 'The Avengers'
+      'The Mummy', 'Robert Langdon', 'Transformers', 'The Avengers',
+      'Dune', 'Avatar', 'The Hunger Games', 'The Maze Runner',
+      'Divergent', 'Back to the Future', 'TRON', 'Planet of the Apes',
+      'Godzilla', 'Pirates of the Caribbean', 'Jurassic Park',
+      'Knives Out', 'Detective Chinatown', 'Now You See Me',
+      'The Godfather', 'Enola Holmes', 'Dragon Gate Posthouse',
+      'Three Colors', 'Fantastic Beasts'
     ]
   },
   {
@@ -66,7 +73,8 @@ const COLLECTION_CATEGORIES = [
       'Fear Street', 'Halloween', 'Blair Witch', "Rosemary's Baby",
       'Scary Movie', 'Hocus Pocus', 'I Know What You Did Last Summer',
       'Texas Chainsaw Massacre', '28 Days/Weeks/Years Later',
-      'Gremlins', 'Jaws', 'X'
+      'Gremlins', 'Jaws', 'X', 'The Twilight',
+      'Searching', 'Hercule Poirot', 'Fifty Shades'
     ]
   },
   {
@@ -79,7 +87,7 @@ const COLLECTION_CATEGORIES = [
       'High School Musical', 'Hotel Transylvania',
       'Diary of a Wimpy Kid', 'Men in Black',
       'Night at the Museum', 'Jumanji', 'Paddington',
-      'Ghostbusters'
+      'Ghostbusters', 'The Princess Diaries'
     ]
   },
   {
@@ -92,31 +100,7 @@ const COLLECTION_CATEGORIES = [
       'Ice Age', 'Minions', 'Despicable Me', 'Lilo & Stitch',
       'The Little Mermaid', 'Beauty and the Beast', 'Aladdin',
       'Tom & Jerry', 'Scooby-Doo', 'Sonic the Hedgehog',
-      "Shinkai's Disaster Trilogy"
-    ]
-  },
-  {
-    id: 'scifi',
-    label: 'Sci-Fi & Fantasy',
-    emoji: '\u{1F9D9}',
-    collections: [
-      'Dune', 'Avatar', 'The Hunger Games', 'The Maze Runner',
-      'Divergent', 'The Twilight', 'Fantastic Beasts',
-      'Lord of the Rings', 'Pirates of the Caribbean',
-      'Jurassic', 'Jurassic Park', 'Back to the Future',
-      'TRON', 'Planet of the Apes', 'The Incredibles',
-      'Godzilla', 'Fifty Shades'
-    ]
-  },
-  {
-    id: 'mystery',
-    label: 'Mystery & Drama',
-    emoji: '\u{1F50D}',
-    collections: [
-      'Knives Out', 'Detective Chinatown', 'Now You See Me',
-      'The Godfather', 'Enola Holmes', 'Hercule Poirot',
-      'The Princess Diaries', 'Searching', 'Dragon Gate Posthouse',
-      'Three Colors'
+      "Shinkai's Disaster Trilogy", 'The Incredibles'
     ]
   }
 ];
@@ -127,9 +111,16 @@ const CATEGORY_STYLES: Record<string, { bg: string; border: string; text: string
   action:   { bg: 'bg-red-500/15', border: 'border-red-500/50', text: 'text-red-400', hover: 'hover:bg-red-500/30 hover:border-red-400' },
   horror:   { bg: 'bg-purple-500/20', border: 'border-purple-500/50', text: 'text-purple-400', hover: 'hover:bg-purple-500/30 hover:border-purple-400' },
   comedy:   { bg: 'bg-green-500/20', border: 'border-green-500/50', text: 'text-green-400', hover: 'hover:bg-green-500/30 hover:border-green-400' },
-  animation:{ bg: 'bg-blue-500/20', border: 'border-blue-500/50', text: 'text-blue-400', hover: 'hover:bg-blue-500/30 hover:border-blue-400' },
-  scifi:    { bg: 'bg-cyan-500/20', border: 'border-cyan-500/50', text: 'text-cyan-400', hover: 'hover:bg-cyan-500/30 hover:border-cyan-400' },
-  mystery:  { bg: 'bg-amber-500/20', border: 'border-amber-500/50', text: 'text-amber-400', hover: 'hover:bg-amber-500/30 hover:border-amber-400' }
+  animation:{ bg: 'bg-blue-500/20', border: 'border-blue-500/50', text: 'text-blue-400', hover: 'hover:bg-blue-500/30 hover:border-blue-400' }
+};
+
+// Category tab styles for horizontal swipeable tabs
+const CATEGORY_TAB_STYLES: Record<string, { active: string; inactive: string; indicator: string }> = {
+  universe: { active: 'text-orange-400 border-orange-400', inactive: 'text-gray-400 border-transparent', indicator: 'bg-orange-400' },
+  action:   { active: 'text-red-400 border-red-400', inactive: 'text-gray-400 border-transparent', indicator: 'bg-red-400' },
+  horror:   { active: 'text-purple-400 border-purple-400', inactive: 'text-gray-400 border-transparent', indicator: 'bg-purple-400' },
+  comedy:   { active: 'text-green-400 border-green-400', inactive: 'text-gray-400 border-transparent', indicator: 'bg-green-400' },
+  animation:{ active: 'text-blue-400 border-blue-400', inactive: 'text-gray-400 border-transparent', indicator: 'bg-blue-400' }
 };
 
 // Derived flat arrays (backward compatible)
@@ -213,6 +204,7 @@ function GenresContent() {
   const [seriesTotal, setSeriesTotal] = useState(0);
   const [resultsLoading, setResultsLoading] = useState(false);
   const [collectionSearch, setCollectionSearch] = useState('');
+  const [activeCategoryTab, setActiveCategoryTab] = useState<string>('universe');
   
   const activeTab = isShowTags ? 'tags' : isShowCollections ? 'collections' : (tag || collection) ? null : 'genres';
 
@@ -574,7 +566,7 @@ function GenresContent() {
 
           {/* Collections Content */}
           {activeTab === 'collections' && (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {/* Search Collections */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -597,52 +589,128 @@ function GenresContent() {
 
               {/* Total Count */}
               <p className="text-gray-500 text-xs">
-                {AUTO_COLLECTIONS.length} collections in {COLLECTION_CATEGORIES.length} categories
+                {collectionSearch
+                  ? `${AUTO_COLLECTIONS.filter(c => c.toLowerCase().includes(collectionSearch.toLowerCase())).length} results found`
+                  : `${AUTO_COLLECTIONS.length} collections in ${COLLECTION_CATEGORIES.length} categories`
+                }
               </p>
 
-              {/* Category Sections */}
-              {COLLECTION_CATEGORIES.map((category) => {
-                const filteredCollections = category.collections.filter(c =>
-                  c.toLowerCase().includes(collectionSearch.toLowerCase())
-                );
+              {/* Category Tabs - Horizontal Swipeable */}
+              {!collectionSearch && (
+                <div className="relative">
+                  <div
+                    className="flex gap-1 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-2"
+                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+                  >
+                    {COLLECTION_CATEGORIES.map((category) => {
+                      const tabStyle = CATEGORY_TAB_STYLES[category.id];
+                      const isActive = activeCategoryTab === category.id;
+                      return (
+                        <button
+                          key={category.id}
+                          onClick={() => setActiveCategoryTab(category.id)}
+                          className={cn(
+                            'flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 flex-shrink-0 border-b-2',
+                            isActive
+                              ? `${tabStyle.active} bg-white/5`
+                              : `${tabStyle.inactive} hover:text-white hover:bg-white/5`
+                          )}
+                        >
+                          <span className="text-base">{category.emoji}</span>
+                          <span>{category.label}</span>
+                          <span className={cn(
+                            'text-xs px-1.5 py-0.5 rounded-full',
+                            isActive ? 'bg-white/10' : 'bg-white/5'
+                          )}>
+                            {category.collections.length}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
-                if (filteredCollections.length === 0) return null;
-
-                const style = CATEGORY_STYLES[category.id];
-                const isUniverseCat = category.id === 'universe';
-
-                return (
-                  <section key={category.id}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-base">{category.emoji}</span>
-                      <h2 className="text-white font-semibold">{category.label}</h2>
-                      <span className="text-gray-500 text-xs">({filteredCollections.length})</span>
-                    </div>
-                    {isUniverseCat && (
-                      <p className="text-gray-400 text-xs mb-3">
-                        Shows ALL universe content across franchises
-                      </p>
-                    )}
-                    <div className="grid grid-cols-2 gap-2">
-                      {filteredCollections.map((c) => {
-                        const isUniverse = UNIVERSE_COLLECTIONS.includes(c);
-                        return (
-                          <Link
-                            key={c}
-                            href={`/collection/${encodeURIComponent(c)}`}
-                            className={`px-3 py-3 rounded-lg text-sm font-medium transition-all text-left flex items-center justify-between border ${style.bg} ${style.border} ${style.text} ${style.hover}`}
-                          >
-                            <span className="truncate">{c}</span>
-                            {isUniverse && (
-                              <span className="text-[10px] bg-orange-500/30 px-1.5 py-0.5 rounded ml-1 flex-shrink-0">UNIVERSE</span>
-                            )}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  </section>
-                );
-              })}
+              {/* Collections Grid */}
+              {collectionSearch ? (
+                /* Search results across all categories */
+                <div className="space-y-4">
+                  {COLLECTION_CATEGORIES.map((category) => {
+                    const filteredCollections = category.collections.filter(c =>
+                      c.toLowerCase().includes(collectionSearch.toLowerCase())
+                    );
+                    if (filteredCollections.length === 0) return null;
+                    const style = CATEGORY_STYLES[category.id];
+                    return (
+                      <section key={category.id}>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-base">{category.emoji}</span>
+                          <h2 className="text-white font-semibold text-sm">{category.label}</h2>
+                          <span className="text-gray-500 text-xs">({filteredCollections.length})</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          {filteredCollections.map((c) => {
+                            const isUniverse = UNIVERSE_COLLECTIONS.includes(c);
+                            return (
+                              <Link
+                                key={c}
+                                href={`/collection/${encodeURIComponent(c)}`}
+                                className={`px-3 py-3 rounded-lg text-sm font-medium transition-all text-left flex items-center justify-between border ${style.bg} ${style.border} ${style.text} ${style.hover}`}
+                              >
+                                <span className="truncate">{c}</span>
+                                {isUniverse && (
+                                  <span className="text-[10px] bg-orange-500/30 px-1.5 py-0.5 rounded ml-1 flex-shrink-0">UNIVERSE</span>
+                                )}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </section>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* Show only active category */
+                <section>
+                  {(() => {
+                    const category = COLLECTION_CATEGORIES.find(c => c.id === activeCategoryTab);
+                    if (!category) return null;
+                    const style = CATEGORY_STYLES[category.id];
+                    const isUniverseCat = category.id === 'universe';
+                    return (
+                      <>
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-lg">{category.emoji}</span>
+                          <h2 className="text-white font-semibold">{category.label}</h2>
+                          <span className="text-gray-500 text-xs">({category.collections.length})</span>
+                        </div>
+                        {isUniverseCat && (
+                          <p className="text-gray-400 text-xs mb-3">
+                            Shows ALL universe content across franchises
+                          </p>
+                        )}
+                        <div className="grid grid-cols-2 gap-2">
+                          {category.collections.map((c) => {
+                            const isUniverse = UNIVERSE_COLLECTIONS.includes(c);
+                            return (
+                              <Link
+                                key={c}
+                                href={`/collection/${encodeURIComponent(c)}`}
+                                className={`px-3 py-3 rounded-lg text-sm font-medium transition-all text-left flex items-center justify-between border ${style.bg} ${style.border} ${style.text} ${style.hover}`}
+                              >
+                                <span className="truncate">{c}</span>
+                                {isUniverse && (
+                                  <span className="text-[10px] bg-orange-500/30 px-1.5 py-0.5 rounded ml-1 flex-shrink-0">UNIVERSE</span>
+                                )}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </>
+                    );
+                  })()}
+                </section>
+              )}
             </div>
           )}
         </>
