@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { MovieCard } from '@/components/movie/MovieCard';
-import { ChevronLeft, ChevronRight, X, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Movie {
@@ -26,20 +26,19 @@ export default function MoviesContent() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Get page from URL, default to 1
   const currentPage = parseInt(searchParams.get('page') || '1', 10);
   const genreFilter = searchParams.get('genre');
   const tagFilter = searchParams.get('tag');
+  const searchQuery = searchParams.get('search') || '';
   const activeFilter = genreFilter || tagFilter;
   const filterType = genreFilter ? 'Genre' : tagFilter ? 'Tag' : null;
   
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
-  const fetchMovies = useCallback(async (search: string = '') => {
+  const fetchMovies = useCallback(async () => {
     setLoading(true);
     setIsTransitioning(true);
     try {
@@ -48,7 +47,7 @@ export default function MoviesContent() {
       params.set('offset', ((currentPage - 1) * ITEMS_PER_PAGE).toString());
       if (genreFilter) params.set('genre', genreFilter);
       if (tagFilter) params.set('tag', tagFilter);
-      if (search) params.set('search', search);
+      if (searchQuery) params.set('search', searchQuery);
 
       const response = await fetch('/api/movies?' + params.toString());
       if (response.ok) {
@@ -62,23 +61,11 @@ export default function MoviesContent() {
       setLoading(false);
       setTimeout(() => setIsTransitioning(false), 100);
     }
-  }, [currentPage, genreFilter, tagFilter]);
+  }, [currentPage, genreFilter, tagFilter, searchQuery]);
 
   useEffect(() => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-    
-    searchTimeoutRef.current = setTimeout(() => {
-      fetchMovies(searchQuery);
-    }, 300);
-
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-    };
-  }, [searchQuery, fetchMovies]);
+    fetchMovies();
+  }, [fetchMovies]);
 
   // Navigate to page by updating URL
   const goToPage = useCallback((page: number) => {
@@ -119,27 +106,7 @@ export default function MoviesContent() {
   }, [totalPages, currentPage]);
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] pb-20">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-[#0f0f0f]/95 backdrop-blur-sm border-b border-gray-800 p-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-white font-bold text-xl">
-            {activeFilter ? `${filterType}: ${activeFilter}` : 'Movies'}
-          </h1>
-          <div className="relative w-56">
-            <input 
-              type="text" 
-              placeholder="Search movies..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              autoComplete="off"
-              className="w-full bg-[#1a1a1a] text-white rounded-lg pl-10 pr-4 py-2.5 text-sm border border-gray-700 focus:border-red-500 focus:outline-none transition-colors duration-200" 
-            />
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          </div>
-        </div>
-      </div>
-
+    <>
       {/* Active Filter Tag */}
       {activeFilter && (
         <div className="px-4 pt-3">
@@ -169,11 +136,8 @@ export default function MoviesContent() {
           <div className="grid grid-cols-4 gap-2">
             {[...Array(20)].map((_, i) => (
               <div key={i}>
-                {/* Poster Skeleton */}
                 <div className="aspect-[2/3] bg-gray-800 rounded-md animate-pulse" />
-                {/* Title Skeleton */}
                 <div className="mt-1.5 h-3 bg-gray-800 rounded animate-pulse w-4/5" />
-                {/* Year Skeleton */}
                 <div className="mt-1 h-2.5 bg-gray-800 rounded animate-pulse w-1/3" />
               </div>
             ))}
@@ -235,6 +199,6 @@ export default function MoviesContent() {
           </>
         )}
       </div>
-    </div>
+    </>
   );
 }

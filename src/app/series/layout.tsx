@@ -11,9 +11,8 @@ export default function SeriesLayout({
   children: React.ReactNode;
 }) {
   return (
-    <>
-      <h1 className="sr-only">Series - CINE STREAM</h1>
+    <div className="min-h-screen bg-[#0f0f0f] pb-20">
       {children}
-    </>
+    </div>
   );
 }

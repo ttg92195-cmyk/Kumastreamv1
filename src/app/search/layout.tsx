@@ -10,5 +10,9 @@ export default function SearchLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return (
+    <div className="min-h-screen bg-[#0f0f0f] pb-20">
+      {children}
+    </div>
+  );
 }

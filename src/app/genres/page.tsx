@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Film, Tv, Tag, FolderOpen, Grid3X3, Loader2, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Film, Tv, Tag, FolderOpen, Grid3X3, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -593,8 +593,8 @@ function GenresHeader() {
 
 export default function GenresPage() {
   return (
-    <div className="min-h-screen bg-[#0f0f0f] pb-20">
-      {/* Header */}
+    <>
+      {/* Header — always visible */}
       <Suspense fallback={
         <div className="sticky top-0 z-20 bg-[#0f0f0f] border-b border-gray-800">
           <div className="flex items-center gap-4 p-4">
@@ -606,13 +606,18 @@ export default function GenresPage() {
         <GenresHeader />
       </Suspense>
       
+      {/* Content */}
       <Suspense fallback={
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-red-500" />
+        <div className="p-4 space-y-6">
+          <div className="grid grid-cols-3 gap-2">
+            {[...Array(12)].map((_, i) => (
+              <div key={i} className="h-10 bg-gray-800 rounded animate-pulse" />
+            ))}
+          </div>
         </div>
       }>
         <GenresContent />
       </Suspense>
-    </div>
+    </>
   );
 }
