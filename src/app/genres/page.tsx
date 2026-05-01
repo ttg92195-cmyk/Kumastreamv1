@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Film, Tv, Tag, FolderOpen, Grid3X3, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Film, Tv, Tag, FolderOpen, Grid3X3, X, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -29,28 +29,112 @@ const SERIES_TAGS = [
   'Live Action Remake', 'Time Travel', 'Donghua', 'Superhero', 'Survival'
 ];
 
-// Predefined Collections - Auto detected from title matching
-const AUTO_COLLECTIONS = [
-  'Marvel', 'DC', 'Harry Potter', 'Star Wars', 
-  'James Bond', 'Fast & Furious', 'John Wick', 'Mission Impossible',
-  'Transformers', 'X-Men', 'Spider-Man', 'Batman',
-  'Final Destination', 'Saw', 'Scooby-Doo',
-  'Tom & Jerry',
-  'The Conjuring Universe', 'Jurassic', 'Pirates of the Caribbean',
-  'MonsterVerse', 'Despicable Me', 'Lord of the Rings'
+// Categorized Collections with color styles
+const COLLECTION_CATEGORIES = [
+  {
+    id: 'universe',
+    label: 'Universe',
+    emoji: '\u{1F310}',
+    collections: [
+      'Marvel', 'DC', 'Harry Potter', 'Star Wars',
+      'MonsterVerse', 'The Conjuring Universe', 'Godzilla x Kong'
+    ]
+  },
+  {
+    id: 'action',
+    label: 'Action & Adventure',
+    emoji: '\u{1F525}',
+    collections: [
+      'Fast & Furious', 'James Bond', 'Mission Impossible', 'John Wick',
+      'Die Hard', 'The Terminator', 'Mad Max', 'Indiana Jones',
+      'Top Gun', 'Kingsman', 'Sicario', 'Rush Hour',
+      'Rocky', 'Creed', "Ocean's", 'The Matrix',
+      'X-Men', 'Spider-Man', 'Spider-Man: Spider-Verse',
+      'Batman', 'The Dark Knight', 'Deadpool',
+      'Guardians of the Galaxy', 'Ant-Man', 'The Wolverine',
+      'Venom', 'Predator', 'Alien', 'Blade',
+      'The Mummy', 'Robert Langdon', 'Transformers', 'The Avengers'
+    ]
+  },
+  {
+    id: 'horror',
+    label: 'Horror & Thriller',
+    emoji: '\u{1F47B}',
+    collections: [
+      'Saw', 'Final Destination', 'Scream', 'Evil Dead',
+      'Annabelle', 'The Hannibal Lecter', 'Psycho', 'Terrifier',
+      'Fear Street', 'Halloween', 'Blair Witch', "Rosemary's Baby",
+      'Scary Movie', 'Hocus Pocus', 'I Know What You Did Last Summer',
+      'Texas Chainsaw Massacre', '28 Days/Weeks/Years Later',
+      'Gremlins', 'Jaws', 'X'
+    ]
+  },
+  {
+    id: 'comedy',
+    label: 'Comedy',
+    emoji: '\u{1F602}',
+    collections: [
+      'American Pie', 'The Hangover', 'Home Alone',
+      'Bridget Jones', 'Pitch Perfect', 'Austin Powers',
+      'High School Musical', 'Hotel Transylvania',
+      'Diary of a Wimpy Kid', 'Men in Black',
+      'Night at the Museum', 'Jumanji', 'Paddington',
+      'Ghostbusters'
+    ]
+  },
+  {
+    id: 'animation',
+    label: 'Animation & Family',
+    emoji: '\u{1F9F8}',
+    collections: [
+      'Shrek', 'Toy Story', 'Cars', 'How to Train Your Dragon',
+      'Kung Fu Panda', 'Madagascar', 'The Lion King', 'Frozen',
+      'Ice Age', 'Minions', 'Despicable Me', 'Lilo & Stitch',
+      'The Little Mermaid', 'Beauty and the Beast', 'Aladdin',
+      'Tom & Jerry', 'Scooby-Doo', 'Sonic the Hedgehog',
+      "Shinkai's Disaster Trilogy"
+    ]
+  },
+  {
+    id: 'scifi',
+    label: 'Sci-Fi & Fantasy',
+    emoji: '\u{1F9D9}',
+    collections: [
+      'Dune', 'Avatar', 'The Hunger Games', 'The Maze Runner',
+      'Divergent', 'The Twilight', 'Fantastic Beasts',
+      'Lord of the Rings', 'Pirates of the Caribbean',
+      'Jurassic', 'Jurassic Park', 'Back to the Future',
+      'TRON', 'Planet of the Apes', 'The Incredibles',
+      'Godzilla', 'Fifty Shades'
+    ]
+  },
+  {
+    id: 'mystery',
+    label: 'Mystery & Drama',
+    emoji: '\u{1F50D}',
+    collections: [
+      'Knives Out', 'Detective Chinatown', 'Now You See Me',
+      'The Godfather', 'Enola Holmes', 'Hercule Poirot',
+      'The Princess Diaries', 'Searching', 'Dragon Gate Posthouse',
+      'Three Colors'
+    ]
+  }
 ];
 
-// Collections that show ALL universe content (related movies + series)
-const UNIVERSE_COLLECTIONS = [
-  'Marvel', 'DC', 'Harry Potter', 'Star Wars', 
-  'X-Men', 'Spider-Man', 'The Conjuring Universe', 
-  'Jurassic', 'MonsterVerse', 'Despicable Me', 'Lord of the Rings',
-  'Tom & Jerry', 'James Bond', 'Fast & Furious', 'Mission Impossible',
-  'Transformers', 'Batman', 'Scooby-Doo'
-];
+// Color styles per category
+const CATEGORY_STYLES: Record<string, { bg: string; border: string; text: string; hover: string }> = {
+  universe: { bg: 'bg-orange-500/20', border: 'border-orange-500/50', text: 'text-orange-400', hover: 'hover:bg-orange-500/30 hover:border-orange-400' },
+  action:   { bg: 'bg-red-500/15', border: 'border-red-500/50', text: 'text-red-400', hover: 'hover:bg-red-500/30 hover:border-red-400' },
+  horror:   { bg: 'bg-purple-500/20', border: 'border-purple-500/50', text: 'text-purple-400', hover: 'hover:bg-purple-500/30 hover:border-purple-400' },
+  comedy:   { bg: 'bg-green-500/20', border: 'border-green-500/50', text: 'text-green-400', hover: 'hover:bg-green-500/30 hover:border-green-400' },
+  animation:{ bg: 'bg-blue-500/20', border: 'border-blue-500/50', text: 'text-blue-400', hover: 'hover:bg-blue-500/30 hover:border-blue-400' },
+  scifi:    { bg: 'bg-cyan-500/20', border: 'border-cyan-500/50', text: 'text-cyan-400', hover: 'hover:bg-cyan-500/30 hover:border-cyan-400' },
+  mystery:  { bg: 'bg-amber-500/20', border: 'border-amber-500/50', text: 'text-amber-400', hover: 'hover:bg-amber-500/30 hover:border-amber-400' }
+};
 
-// Manual Collections - Filter by assigned tag in database
-const DB_COLLECTIONS: string[] = [];
+// Derived flat arrays (backward compatible)
+const AUTO_COLLECTIONS = COLLECTION_CATEGORIES.flatMap(c => c.collections);
+const UNIVERSE_COLLECTIONS = COLLECTION_CATEGORIES.find(c => c.id === 'universe')?.collections || [];
 
 interface Content {
   id: string;
@@ -128,6 +212,7 @@ function GenresContent() {
   const [movieTotal, setMovieTotal] = useState(0);
   const [seriesTotal, setSeriesTotal] = useState(0);
   const [resultsLoading, setResultsLoading] = useState(false);
+  const [collectionSearch, setCollectionSearch] = useState('');
   
   const activeTab = isShowTags ? 'tags' : isShowCollections ? 'collections' : (tag || collection) ? null : 'genres';
 
@@ -490,61 +575,74 @@ function GenresContent() {
           {/* Collections Content */}
           {activeTab === 'collections' && (
             <div className="space-y-6">
-              {/* Auto Collections */}
-              <section>
-                <div className="flex items-center gap-2 mb-2">
-                  <FolderOpen className="w-4 h-4 text-red-500" />
-                  <h2 className="text-white font-semibold">Auto Collections</h2>
-                </div>
-                <p className="text-gray-400 text-xs mb-3">
-                  Click to view all related movies/series. 
-                  <span className="text-orange-400"> Marvel & DC </span> 
-                  show ALL universe content
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  {AUTO_COLLECTIONS.map((c) => {
-                    const isUniverse = UNIVERSE_COLLECTIONS.includes(c);
-                    return (
-                      <Link
-                        key={c}
-                        href={`/collection/${encodeURIComponent(c)}`}
-                        className={`px-3 py-3 rounded-lg text-sm font-medium transition-all text-left flex items-center justify-between ${
-                          isUniverse 
-                            ? 'bg-orange-500/20 border border-orange-500/50 text-orange-400 hover:bg-orange-500/30 hover:border-orange-400' 
-                            : 'bg-purple-500/20 border border-purple-500/50 text-purple-400 hover:bg-purple-500/30 hover:border-purple-400'
-                        }`}
-                      >
-                        <span>{c}</span>
-                        {isUniverse && (
-                          <span className="text-[10px] bg-orange-500/30 px-1.5 py-0.5 rounded">UNIVERSE</span>
-                        )}
-                      </Link>
-                    );
-                  })}
-                </div>
-              </section>
+              {/* Search Collections */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search collections..."
+                  value={collectionSearch}
+                  onChange={(e) => setCollectionSearch(e.target.value)}
+                  className="w-full bg-[#1a1a1a] text-white rounded-lg pl-10 pr-10 py-2.5 text-sm border border-gray-700 focus:border-red-500 focus:outline-none transition-colors duration-200"
+                />
+                {collectionSearch && (
+                  <button
+                    onClick={() => setCollectionSearch('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
 
-              {/* DB Collections - Only show if not empty */}
-              {DB_COLLECTIONS.length > 0 && (
-                <section>
-                  <div className="flex items-center gap-2 mb-2">
-                    <FolderOpen className="w-4 h-4 text-red-500" />
-                    <h2 className="text-white font-semibold">Manual Collections</h2>
-                  </div>
-                  <p className="text-gray-400 text-xs mb-3">Filter by assigned collection tag</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {DB_COLLECTIONS.map((c) => (
-                      <button
-                        key={c}
-                        onClick={() => handleCollectionClick(c)}
-                        className="px-3 py-3 bg-blue-500/20 border border-blue-500/50 text-blue-400 rounded-lg text-sm font-medium hover:bg-blue-500/30 hover:border-blue-400 transition-all text-left"
-                      >
-                        {c}
-                      </button>
-                    ))}
-                  </div>
-                </section>
-              )}
+              {/* Total Count */}
+              <p className="text-gray-500 text-xs">
+                {AUTO_COLLECTIONS.length} collections in {COLLECTION_CATEGORIES.length} categories
+              </p>
+
+              {/* Category Sections */}
+              {COLLECTION_CATEGORIES.map((category) => {
+                const filteredCollections = category.collections.filter(c =>
+                  c.toLowerCase().includes(collectionSearch.toLowerCase())
+                );
+
+                if (filteredCollections.length === 0) return null;
+
+                const style = CATEGORY_STYLES[category.id];
+                const isUniverseCat = category.id === 'universe';
+
+                return (
+                  <section key={category.id}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-base">{category.emoji}</span>
+                      <h2 className="text-white font-semibold">{category.label}</h2>
+                      <span className="text-gray-500 text-xs">({filteredCollections.length})</span>
+                    </div>
+                    {isUniverseCat && (
+                      <p className="text-gray-400 text-xs mb-3">
+                        Shows ALL universe content across franchises
+                      </p>
+                    )}
+                    <div className="grid grid-cols-2 gap-2">
+                      {filteredCollections.map((c) => {
+                        const isUniverse = UNIVERSE_COLLECTIONS.includes(c);
+                        return (
+                          <Link
+                            key={c}
+                            href={`/collection/${encodeURIComponent(c)}`}
+                            className={`px-3 py-3 rounded-lg text-sm font-medium transition-all text-left flex items-center justify-between border ${style.bg} ${style.border} ${style.text} ${style.hover}`}
+                          >
+                            <span className="truncate">{c}</span>
+                            {isUniverse && (
+                              <span className="text-[10px] bg-orange-500/30 px-1.5 py-0.5 rounded ml-1 flex-shrink-0">UNIVERSE</span>
+                            )}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </section>
+                );
+              })}
             </div>
           )}
         </>
