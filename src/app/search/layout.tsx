@@ -1,6 +1,4 @@
 import type { Metadata } from 'next';
-import { Suspense } from 'react';
-import { SearchHeader, SearchHeaderFallback } from './SearchHeader';
 
 export const metadata: Metadata = {
   title: 'Search - CINE STREAM',
@@ -13,13 +11,9 @@ export default function SearchLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[#0f0f0f] pb-20">
-      {/* Header — in layout so it persists during navigation & refresh */}
-      <Suspense fallback={<SearchHeaderFallback />}>
-        <SearchHeader />
-      </Suspense>
-      {/* Page content — loading.tsx replaces only this part */}
+    <>
+      <h1 className="sr-only">Search - CINE STREAM</h1>
       {children}
-    </div>
+    </>
   );
 }

@@ -6,6 +6,7 @@ import { Film, Tv, Tag, FolderOpen, Grid3X3, X, ChevronLeft, ChevronRight } from
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import Image from 'next/image';
+import { GenresHeader, GenresHeaderFallback } from './GenresHeader';
 
 interface Genre {
   id: string;
@@ -566,8 +567,13 @@ function GenresGridSkeleton() {
 
 export default function GenresPage() {
   return (
-    <Suspense fallback={<GenresGridSkeleton />}>
-      <GenresContent />
-    </Suspense>
+    <div className="min-h-screen bg-[#0f0f0f] pb-20">
+      <Suspense fallback={<GenresHeaderFallback />}>
+        <GenresHeader />
+      </Suspense>
+      <Suspense fallback={<GenresGridSkeleton />}>
+        <GenresContent />
+      </Suspense>
+    </div>
   );
 }

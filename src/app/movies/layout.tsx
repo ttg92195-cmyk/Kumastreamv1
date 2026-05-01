@@ -1,6 +1,4 @@
 import type { Metadata } from 'next';
-import { Suspense } from 'react';
-import { MoviesHeader, MoviesHeaderFallback } from './MoviesHeader';
 
 export const metadata: Metadata = {
   title: 'Movies - CINE STREAM',
@@ -13,13 +11,9 @@ export default function MoviesLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[#0f0f0f] pb-20">
-      {/* Header — in layout so it persists during navigation & refresh */}
-      <Suspense fallback={<MoviesHeaderFallback />}>
-        <MoviesHeader />
-      </Suspense>
-      {/* Page content — loading.tsx replaces only this part */}
+    <>
+      <h1 className="sr-only">Movies - CINE STREAM</h1>
       {children}
-    </div>
+    </>
   );
 }

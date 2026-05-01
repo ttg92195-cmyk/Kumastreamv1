@@ -2,6 +2,7 @@
 
 import { Suspense } from 'react';
 import SearchContent from './SearchContent';
+import { SearchHeader, SearchHeaderFallback } from './SearchHeader';
 
 function SearchGridSkeleton() {
   return (
@@ -21,8 +22,13 @@ function SearchGridSkeleton() {
 
 export default function SearchPage() {
   return (
-    <Suspense fallback={<SearchGridSkeleton />}>
-      <SearchContent />
-    </Suspense>
+    <div className="min-h-screen bg-[#0f0f0f] pb-20">
+      <Suspense fallback={<SearchHeaderFallback />}>
+        <SearchHeader />
+      </Suspense>
+      <Suspense fallback={<SearchGridSkeleton />}>
+        <SearchContent />
+      </Suspense>
+    </div>
   );
 }

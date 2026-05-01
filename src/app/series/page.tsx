@@ -2,6 +2,7 @@
 
 import { Suspense } from 'react';
 import SeriesContent from './SeriesContent';
+import { SeriesHeader, SeriesHeaderFallback } from './SeriesHeader';
 
 function SeriesGridSkeleton() {
   return (
@@ -21,8 +22,13 @@ function SeriesGridSkeleton() {
 
 export default function SeriesPage() {
   return (
-    <Suspense fallback={<SeriesGridSkeleton />}>
-      <SeriesContent />
-    </Suspense>
+    <div className="min-h-screen bg-[#0f0f0f] pb-20">
+      <Suspense fallback={<SeriesHeaderFallback />}>
+        <SeriesHeader />
+      </Suspense>
+      <Suspense fallback={<SeriesGridSkeleton />}>
+        <SeriesContent />
+      </Suspense>
+    </div>
   );
 }
