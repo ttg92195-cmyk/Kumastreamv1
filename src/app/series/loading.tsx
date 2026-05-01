@@ -1,10 +1,4 @@
-'use client';
-
-import { Suspense } from 'react';
-import MoviesContent from './MoviesContent';
-
-// Skeleton fallback matching MoviesContent layout
-function MoviesSkeleton() {
+export default function SeriesLoading() {
   return (
     <div className="min-h-screen bg-[#0f0f0f] pb-20">
       {/* Header Skeleton */}
@@ -27,13 +21,5 @@ function MoviesSkeleton() {
         </div>
       </div>
     </div>
-  );
-}
-
-export default function MoviesPage() {
-  return (
-    <Suspense fallback={<MoviesSkeleton />}>
-      <MoviesContent />
-    </Suspense>
   );
 }
