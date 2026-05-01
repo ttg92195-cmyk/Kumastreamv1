@@ -1,24 +1,8 @@
 'use client';
 
 import { Suspense } from 'react';
-import { Header } from '@/components/movie/Header';
 import SearchContent from './SearchContent';
 
-/* ─── Header fallback (static, visible during hydration) ─── */
-function SearchHeaderFallback() {
-  return (
-    <header className="sticky top-0 z-20 bg-[#0f0f0f]/95 backdrop-blur-sm border-b border-gray-800">
-      <div className="flex items-center gap-3 px-4 h-14">
-        <div className="text-white font-bold text-lg">CINE</div>
-        <div className="flex-1">
-          <div className="w-full bg-[#1a1a1a] rounded-full h-10 border border-gray-700" />
-        </div>
-      </div>
-    </header>
-  );
-}
-
-/* ─── Grid skeleton (inside Suspense → replaces content only) ─── */
 function SearchGridSkeleton() {
   return (
     <div className="p-4">
@@ -35,19 +19,10 @@ function SearchGridSkeleton() {
   );
 }
 
-/* ─── Page: Header (always visible) + Content (skeleton during loading) ─── */
 export default function SearchPage() {
   return (
-    <>
-      {/* Header — separate Suspense, never covered by content skeleton */}
-      <Suspense fallback={<SearchHeaderFallback />}>
-        <Header searchPlaceholder="Search movies and series..." />
-      </Suspense>
-
-      {/* Content — only this shows skeleton during loading */}
-      <Suspense fallback={<SearchGridSkeleton />}>
-        <SearchContent />
-      </Suspense>
-    </>
+    <Suspense fallback={<SearchGridSkeleton />}>
+      <SearchContent />
+    </Suspense>
   );
 }

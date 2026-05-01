@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
+import { GenresHeader, GenresHeaderFallback } from './GenresHeader';
 
 export const metadata: Metadata = {
   title: 'Genres & Tags - CINE STREAM',
@@ -12,6 +14,11 @@ export default function GenresLayout({
 }) {
   return (
     <div className="min-h-screen bg-[#0f0f0f] pb-20">
+      {/* Header — in layout so it persists during navigation & refresh */}
+      <Suspense fallback={<GenresHeaderFallback />}>
+        <GenresHeader />
+      </Suspense>
+      {/* Page content — loading.tsx replaces only this part */}
       {children}
     </div>
   );

@@ -1,14 +1,11 @@
 'use client';
 
-import { Suspense, useEffect, useState, useMemo } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Film, Tv, Tag, FolderOpen, Grid3X3, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Film, Tv, Tag, FolderOpen, Grid3X3, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import Image from 'next/image';
-
-// Theme color - RED
-const THEME_COLOR = '#ef4444';
 
 interface Genre {
   id: string;
@@ -555,37 +552,13 @@ function GenresContent() {
   );
 }
 
-// Header component
-function GenresHeader() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const tag = searchParams.get('tag') || '';
-  const collection = searchParams.get('collection') || '';
-  
-  const isShowTags = tag === '_show_tags';
-  const isShowCollections = collection === '_show_collections';
-  const hasRealFilter = (tag && !isShowTags) || (collection && !isShowCollections);
-  
-  let title = 'Genres';
-  if (hasRealFilter) {
-    if (tag && !isShowTags) {
-      title = `Tag: ${tag}`;
-    } else if (collection && !isShowCollections) {
-      title = `Collection: ${collection}`;
-    }
-  } else if (isShowTags) {
-    title = 'Tags';
-  } else if (isShowCollections) {
-    title = 'Collections';
-  }
-
+function GenresGridSkeleton() {
   return (
-    <div className="sticky top-0 z-20 bg-[#0f0f0f] border-b border-gray-800">
-      <div className="flex items-center gap-4 p-4">
-        <button onClick={() => router.back()} className="text-red-500">
-          <ArrowLeft className="w-6 h-6" />
-        </button>
-        <h1 className="text-white font-bold text-lg">{title}</h1>
+    <div className="p-4 space-y-6">
+      <div className="grid grid-cols-3 gap-2">
+        {[...Array(12)].map((_, i) => (
+          <div key={i} className="h-10 bg-gray-800 rounded animate-pulse" />
+        ))}
       </div>
     </div>
   );
@@ -593,31 +566,8 @@ function GenresHeader() {
 
 export default function GenresPage() {
   return (
-    <>
-      {/* Header — always visible */}
-      <Suspense fallback={
-        <div className="sticky top-0 z-20 bg-[#0f0f0f] border-b border-gray-800">
-          <div className="flex items-center gap-4 p-4">
-            <div className="w-6 h-6 bg-gray-800 rounded animate-pulse" />
-            <div className="h-5 w-24 bg-gray-800 rounded animate-pulse" />
-          </div>
-        </div>
-      }>
-        <GenresHeader />
-      </Suspense>
-      
-      {/* Content */}
-      <Suspense fallback={
-        <div className="p-4 space-y-6">
-          <div className="grid grid-cols-3 gap-2">
-            {[...Array(12)].map((_, i) => (
-              <div key={i} className="h-10 bg-gray-800 rounded animate-pulse" />
-            ))}
-          </div>
-        </div>
-      }>
-        <GenresContent />
-      </Suspense>
-    </>
+    <Suspense fallback={<GenresGridSkeleton />}>
+      <GenresContent />
+    </Suspense>
   );
 }
