@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Save, Loader2, Plus, X, Tv, Edit2, Trash2, Check, ChevronDown, ChevronUp, CheckCircle, Tag, FolderOpen, Server } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Plus, X, Tv, Edit2, Trash2, Check, ChevronDown, ChevronUp, CheckCircle, Tag, Server } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { cn } from '@/lib/utils';
 
@@ -18,52 +18,6 @@ const SERIES_TAGS = [
   'Anime', 'Bollywood', 'C Drama', 'Featured Movies',
   'K Drama', 'Reality Show', 'Thai Drama', 'Trending', 'Completed',
   'Live Action Remake', 'Time Travel', 'Donghua', 'Superhero', 'Survival'
-];
-
-// Predefined collections for Series (matches genres/page.tsx)
-const SERIES_COLLECTIONS = [
-  // Universe Collections (multi-keyword search)
-  'Marvel', 'DC', 'Harry Potter', 'Star Wars',
-  'MonsterVerse', 'The Conjuring Universe', 'Godzilla x Kong',
-  'Lord of the Rings', 'Jurassic',
-  // Action & Adventure
-  'Fast & Furious', 'James Bond', 'Mission Impossible', 'John Wick',
-  'Die Hard', 'The Terminator', 'Mad Max', 'Indiana Jones',
-  'Top Gun', 'Kingsman', 'Sicario', 'Rush Hour',
-  'Rocky', 'Creed', "Ocean's", 'The Matrix',
-  'X-Men', 'Spider-Man', 'Spider-Man: Spider-Verse',
-  'Batman', 'The Dark Knight', 'Deadpool',
-  'Guardians of the Galaxy', 'Ant-Man', 'The Wolverine',
-  'Venom', 'Predator', 'Alien', 'Blade',
-  'The Mummy', 'Robert Langdon', 'Transformers', 'The Avengers',
-  'Dune', 'Avatar', 'The Hunger Games', 'The Maze Runner',
-  'Divergent', 'Back to the Future', 'TRON', 'Planet of the Apes',
-  'Godzilla', 'Pirates of the Caribbean', 'Jurassic Park',
-  'Knives Out', 'Detective Chinatown', 'Now You See Me',
-  'The Godfather', 'Enola Holmes', 'Dragon Gate Posthouse',
-  'Three Colors', 'Fantastic Beasts',
-  // Horror & Thriller
-  'Saw', 'Final Destination', 'Scream', 'Evil Dead',
-  'Annabelle', 'The Hannibal Lecter', 'Psycho', 'Terrifier',
-  'Fear Street', 'Halloween', 'Blair Witch', "Rosemary's Baby",
-  'Scary Movie', 'Hocus Pocus', 'I Know What You Did Last Summer',
-  'Texas Chainsaw Massacre', '28 Days/Weeks/Years Later',
-  'Gremlins', 'Jaws', 'X', 'The Twilight',
-  'Searching', 'Hercule Poirot', 'Fifty Shades',
-  // Comedy
-  'American Pie', 'The Hangover', 'Home Alone',
-  'Bridget Jones', 'Pitch Perfect', 'Austin Powers',
-  'High School Musical', 'Hotel Transylvania',
-  'Diary of a Wimpy Kid', 'Men in Black',
-  'Night at the Museum', 'Jumanji', 'Paddington',
-  'Ghostbusters', 'The Princess Diaries',
-  // Animation & Family
-  'Shrek', 'Toy Story', 'Cars', 'How to Train Your Dragon',
-  'Kung Fu Panda', 'Madagascar', 'The Lion King', 'Frozen',
-  'Ice Age', 'Minions', 'Despicable Me', 'Lilo & Stitch',
-  'The Little Mermaid', 'Beauty and the Beast', 'Aladdin',
-  'Tom & Jerry', 'Scooby-Doo', 'Sonic the Hedgehog',
-  "Shinkai's Disaster Trilogy", 'The Incredibles'
 ];
 
 interface DownloadLink {
@@ -117,11 +71,8 @@ export default function EditSeriesPage() {
   const [series, setSeries] = useState<Series | null>(null);
   const [episodes, setEpisodes] = useState<Episode[]>([]);
 
-  // Movie tags (selectable)
+  // Series tags (selectable)
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-
-  // Movie collections (selectable)
-  const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
 
   // Quality tags (for poster display)
   const [qualityTags, setQualityTags] = useState<string[]>([]);
@@ -189,15 +140,10 @@ export default function EditSeriesPage() {
         }));
         setEpisodes(episodesWithLinks);
         
-        // Parse movie tags from tags field
+        // Parse series tags from tags field
         const tagsStr = s.tags || '';
         const sTags = tagsStr.split(',').map((t: string) => t.trim()).filter(Boolean);
         setSelectedTags(sTags);
-        
-        // Parse collections from collections field
-        const collectionsStr = s.collections || '';
-        const sCollections = collectionsStr.split(',').map((c: string) => c.trim()).filter(Boolean);
-        setSelectedCollections(sCollections);
         
         // Parse quality tags from quality field
         const qualityStr = s.quality || '';
@@ -234,22 +180,12 @@ export default function EditSeriesPage() {
     }
   }, [admin, seriesId, fetchSeries]);
 
-  // Toggle movie tag
+  // Toggle series tag
   const toggleTag = (tag: string) => {
     if (selectedTags.includes(tag)) {
       setSelectedTags(selectedTags.filter(t => t !== tag));
     } else {
       setSelectedTags([...selectedTags, tag]);
-    }
-    setSaveSuccess(false);
-  };
-
-  // Toggle movie collection
-  const toggleCollection = (collection: string) => {
-    if (selectedCollections.includes(collection)) {
-      setSelectedCollections(selectedCollections.filter(c => c !== collection));
-    } else {
-      setSelectedCollections([...selectedCollections, collection]);
     }
     setSaveSuccess(false);
   };
@@ -285,10 +221,8 @@ export default function EditSeriesPage() {
     try {
       // Combine quality tags into quality string
       const qualityString = qualityTags.join(' / ');
-      // Combine movie tags into tags string
+      // Combine series tags into tags string
       const tagsString = selectedTags.join(', ');
-      // Combine collections into collections string
-      const collectionsString = selectedCollections.join(', ');
       
       // First update series basic info
       const seriesUpdateData = {
@@ -300,7 +234,6 @@ export default function EditSeriesPage() {
         description: formData.description,
         genres: formData.genres,
         tags: tagsString,
-        collections: collectionsString,
         quality4k: formData.quality4k,
         quality: qualityString,
         seasons: parseInt(formData.seasons) || 0,
@@ -710,52 +643,6 @@ export default function EditSeriesPage() {
                     className="px-2 py-0.5 bg-red-500/20 text-red-400 text-xs rounded"
                   >
                     {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Collections Section - Clickable predefined collections */}
-        <div className="bg-gray-800/50 rounded-lg p-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <FolderOpen className="w-4 h-4 text-red-500" />
-            <h3 className="text-white font-semibold">Collections</h3>
-          </div>
-          <p className="text-gray-400 text-xs">Click to select collections for this series.</p>
-          
-          <div className="flex flex-wrap gap-2">
-            {SERIES_COLLECTIONS.map((collection) => {
-              const isSelected = selectedCollections.includes(collection);
-              return (
-                <button
-                  key={collection}
-                  onClick={() => toggleCollection(collection)}
-                  className={cn(
-                    'px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
-                    isSelected
-                      ? 'text-white ring-2 ring-offset-2 ring-offset-[#0f0f0f]'
-                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  )}
-                  style={isSelected ? { backgroundColor: '#8b5cf6', ringColor: '#8b5cf6' } : {}}
-                >
-                  {collection}
-                </button>
-              );
-            })}
-          </div>
-          
-          {selectedCollections.length > 0 && (
-            <div className="pt-2 border-t border-gray-700">
-              <p className="text-gray-500 text-xs mb-2">Selected: {selectedCollections.length} collections</p>
-              <div className="flex flex-wrap gap-1">
-                {selectedCollections.map((collection) => (
-                  <span
-                    key={collection}
-                    className="px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs rounded"
-                  >
-                    {collection}
                   </span>
                 ))}
               </div>
