@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState, memo, useCallback, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, notFound } from 'next/navigation';
 import Image from 'next/image';
-import { ArrowLeft, Heart, Star, Calendar, Clock, ChevronDown, Download, Lock, Server, ExternalLink, ChevronRight, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Heart, Star, Calendar, Clock, ChevronDown, Download, Lock, Server, ExternalLink, ChevronRight, ChevronUp, AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CastCard } from '@/components/movie/CastCard';
 import { MovieCard } from '@/components/movie/MovieCard';
@@ -283,7 +283,9 @@ export default function SeriesDetailPage() {
       try {
         setLoading(true); // Ensure loading starts true
         const response = await fetch(`/api/series/${id}`);
-        if (response.ok) {
+        if (response.status === 404) {
+          setError('Series not found');
+        } else if (response.ok) {
           const data = await response.json();
           
           if (data.series) {
@@ -480,15 +482,39 @@ export default function SeriesDetailPage() {
   }
 
   if (error || !series) {
+    // If the error is "not found", use the not-found page
+    if (error === 'Series not found' || error === 'Failed to load series') {
+      notFound();
+    }
+    
+    // Network/server error - show retry UI
     return (
       <div className="min-h-screen bg-[#0f0f0f] flex flex-col items-center justify-center p-4">
-        <p className="text-gray-500 mb-4">{error || 'Series not found'}</p>
-        <button
-          onClick={() => router.push('/')}
-          className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm"
-        >
-          Go Home
-        </button>
+        <div className="text-center max-w-md">
+          <div className="w-20 h-20 mx-auto rounded-full bg-red-500/20 flex items-center justify-center mb-6">
+            <AlertTriangle className="w-10 h-10 text-red-500" />
+          </div>
+          <h2 className="text-xl font-bold text-white mb-3">Failed to Load Series</h2>
+          <p className="text-gray-400 mb-6">
+            {error || 'An error occurred while loading this series. This might be a temporary issue.'}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={() => window.location.reload()}
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors"
+            >
+              <RefreshCw className="w-5 h-5" />
+              Try Again
+            </button>
+            <button
+              onClick={() => router.push('/')}
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors border border-gray-700"
+            >
+              <Home className="w-5 h-5" />
+              Go Home
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
