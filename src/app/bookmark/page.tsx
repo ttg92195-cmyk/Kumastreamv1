@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Header } from '@/components/movie/Header';
 import { MovieCard } from '@/components/movie/MovieCard';
 import { useAppStore } from '@/store/useAppStore';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Heart, Film, Tv } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const ITEMS_PER_PAGE = 30;
@@ -100,10 +100,29 @@ function BookmarkContent() {
       <div className="p-4">
         {bookmarks.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-gray-500 mb-2">No bookmarks yet</p>
-            <p className="text-gray-600 text-xs">
+            <div className="w-20 h-20 mx-auto rounded-full bg-red-500/10 flex items-center justify-center mb-4">
+              <Heart className="w-10 h-10 text-red-500/50" />
+            </div>
+            <p className="text-gray-300 font-medium mb-2">No Bookmarks Yet</p>
+            <p className="text-gray-500 text-sm mb-6 max-w-[250px] mx-auto">
               Open a movie or series and tap the heart icon to save it here
             </p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => router.push('/movies')}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-sm hover:text-white hover:bg-gray-700 transition-colors"
+              >
+                <Film className="w-4 h-4" />
+                Browse Movies
+              </button>
+              <button
+                onClick={() => router.push('/series')}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-sm hover:text-white hover:bg-gray-700 transition-colors"
+              >
+                <Tv className="w-4 h-4" />
+                Browse Series
+              </button>
+            </div>
           </div>
         ) : (
           <div className="space-y-4">

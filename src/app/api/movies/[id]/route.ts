@@ -3,7 +3,7 @@ export const revalidate = 600;
 
 import { NextResponse, NextRequest } from 'next/server';
 import { validateAdminAuth, isValidDownloadUrl, sanitizeError } from '@/lib/auth';
-import { getCachedMovieDetail, getCachedSimilarMovies, invalidateMovieCache } from '@/lib/cache';
+import { getCachedMovieDetail, getCachedSimilarMovies, getCachedMovieBySlug, isCuid, invalidateMovieCache } from '@/lib/cache';
 
 // Placeholder image for missing posters
 const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAwIiBoZWlnaHQ9Ijc1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjIyIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM2NjYiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
@@ -62,7 +62,13 @@ export async function GET(
 
     // Try to fetch from database (uses cached query)
     try {
-      const dbMovie = await getCachedMovieDetail(id);
+      // First try direct ID lookup (CUID)
+      let dbMovie = isCuid(id) ? await getCachedMovieDetail(id) : null;
+
+      // If not found by ID, try slug lookup (SEO-friendly URLs like /movie/malena)
+      if (!dbMovie) {
+        dbMovie = await getCachedMovieBySlug(id);
+      }
 
       if (dbMovie) {
         movie = normalizeMovie(dbMovie);

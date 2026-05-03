@@ -184,6 +184,78 @@ export const getCachedEpisodeDetail = unstable_cache(
   { revalidate: EPISODE_REVALIDATE, tags: ['episodes'] },
 );
 
+// ─── Slug-to-ID Lookup (SEO-friendly URLs) ─────────────────────
+// CUIDs are 25+ chars starting with a lowercase letter.
+// If the ID param is not a CUID, try to find by title slug.
+
+function isCuid(id: string): boolean {
+  return /^c[a-z0-9]{20,}$/.test(id);
+}
+
+function slugToTitle(slug: string): string {
+  // "game-of-thrones" → "Game of Thrones"
+  // Also handle "game-of-thrones-2011" → "Game of Thrones" (year optional)
+  return slug
+    .replace(/-/g, ' ')
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+export const getCachedMovieBySlug = unstable_cache(
+  async (slug: string) => {
+    const title = slugToTitle(slug);
+    // Try exact title match first, then partial match
+    const exact = await db.movie.findFirst({
+      where: { title: { equals: title, mode: 'insensitive' } },
+      include: { casts: true, downloadLinks: true },
+    });
+    if (exact) return exact;
+
+    // Try partial match (slug might not match full title)
+    return db.movie.findFirst({
+      where: { title: { contains: title, mode: 'insensitive' } },
+      include: { casts: true, downloadLinks: true },
+    });
+  },
+  ['movies-slug'],
+  { revalidate: DETAIL_REVALIDATE, tags: ['movies'] },
+);
+
+export const getCachedSeriesBySlug = unstable_cache(
+  async (slug: string) => {
+    const title = slugToTitle(slug);
+    // Try exact title match first, then partial match
+    const exact = await db.series.findFirst({
+      where: { title: { equals: title, mode: 'insensitive' } },
+      include: {
+        casts: true,
+        episodes: {
+          orderBy: [{ season: 'asc' }, { episode: 'asc' }],
+          include: { downloadLinks: true },
+        },
+        downloadLinks: true,
+      },
+    });
+    if (exact) return exact;
+
+    // Try partial match
+    return db.series.findFirst({
+      where: { title: { contains: title, mode: 'insensitive' } },
+      include: {
+        casts: true,
+        episodes: {
+          orderBy: [{ season: 'asc' }, { episode: 'asc' }],
+          include: { downloadLinks: true },
+        },
+        downloadLinks: true,
+      },
+    });
+  },
+  ['series-slug'],
+  { revalidate: DETAIL_REVALIDATE, tags: ['series'] },
+);
+
+export { isCuid };
+
 // ─── Cache Invalidation Helpers ─────────────────────────────────
 // Call these after mutations (PUT/DELETE/POST) to bust stale cache
 

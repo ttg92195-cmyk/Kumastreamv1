@@ -78,8 +78,8 @@ const SeriesMetaInfo = memo(function SeriesMetaInfo({
         <span>{year}</span>
       </div>
       <div className="flex items-center gap-1">
-        <Star className="w-4 h-4 text-red-500 fill-red-500" />
-        <span>{rating.toFixed(1)}</span>
+        <Star className={cn("w-4 h-4", rating > 0 ? "text-red-500 fill-red-500" : "text-gray-500")} />
+        <span>{rating > 0 ? rating.toFixed(1) : 'N/A'}</span>
       </div>
       <div className="flex items-center gap-1">
         <Clock className="w-4 h-4" />

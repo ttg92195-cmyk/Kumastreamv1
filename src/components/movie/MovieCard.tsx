@@ -91,8 +91,8 @@ const MovieCard = memo(function MovieCard({
 
         {/* Rating Badge - Top Right */}
         <div className="absolute top-1 right-1 flex items-center gap-0.5 bg-black/80 px-1 py-0.5 rounded">
-          <Star className="w-2.5 h-2.5 text-yellow-500 fill-yellow-500" />
-          <span className="text-white font-medium text-[10px]">{rating.toFixed(1)}</span>
+          <Star className={cn("w-2.5 h-2.5", rating > 0 ? "text-yellow-500 fill-yellow-500" : "text-gray-500")} />
+          <span className="text-white font-medium text-[10px]">{rating > 0 ? rating.toFixed(1) : 'N/A'}</span>
         </div>
 
         {/* Hover Overlay */}
