@@ -97,22 +97,53 @@ export async function GET(
         console.log('Found database series:', series?.title);
       }
 
-      // Get MINIMAL data for similar series calculation (NOT all data with episodes!)
-      // Only select fields needed for display, exclude heavy fields like description, casts, episodes, downloadLinks
-      const dbAllSeries = await db.series.findMany({
-        select: {
-          id: true,
-          title: true,
-          year: true,
-          rating: true,
-          poster: true,
-          genres: true,
-          quality4k: true,
-          quality: true,
-        },
-      });
+      // Get similar series - use DB-side filtering to avoid full table scan
+      // Only fetch series that share at least one genre with the current series
+      const seriesGenres = (series.genres || '').split(',').filter(Boolean).map((g: string) => g.trim());
+      let similarSeries: any[] = [];
 
-      allSeries = dbAllSeries;
+      if (seriesGenres.length > 0) {
+        // Build OR conditions for each genre to find matches
+        const genreConditions = seriesGenres.map((g: string) => ({
+          genres: { contains: g.trim(), mode: 'insensitive' as const },
+        }));
+
+        const dbSimilar = await db.series.findMany({
+          where: {
+            AND: [
+              { id: { not: id } },
+              { OR: genreConditions },
+            ],
+          },
+          select: {
+            id: true,
+            title: true,
+            year: true,
+            rating: true,
+            poster: true,
+            genres: true,
+            quality4k: true,
+            quality: true,
+          },
+          orderBy: { rating: 'desc' },
+          take: 30, // Fetch more than needed for better genre matching, then slice to 6
+        });
+
+        // Score and sort by genre relevance
+        const genresLower = seriesGenres.map((g: string) => g.toLowerCase());
+        similarSeries = dbSimilar
+          .map((s: any) => {
+            const sGenres = (s.genres || '').split(',').filter(Boolean).map((g: string) => g.trim().toLowerCase());
+            const matchingGenres = genresLower.filter((g: string) => sGenres.includes(g)).length;
+            return { ...s, relevance: matchingGenres };
+          })
+          .sort((a: any, b: any) => {
+            if (b.relevance !== a.relevance) return b.relevance - a.relevance;
+            return (b.rating || 0) - (a.rating || 0);
+          })
+          .slice(0, 6)
+          .map(({ relevance, ...s }: any) => s);
+      }
 
       if (!series) {
         console.log('Series not found:', id);
@@ -131,31 +162,16 @@ export async function GET(
         {} as Record<number, typeof series.episodes>
       );
 
-      // Get similar series based on genres - sorted by relevance (more matching genres = higher score)
-      const genres = (series.genres || '').split(',').filter(Boolean).map((g: string) => g.trim().toLowerCase());
-      
-      const similarSeries = allSeries
-        .filter((s: any) => s.id !== id && s.genres)
-        .map((s: any) => {
-          const seriesGenres = (s.genres || '').split(',').filter(Boolean).map((g: string) => g.trim().toLowerCase());
-          const matchingGenres = genres.filter((g: string) => seriesGenres.includes(g)).length;
-          return { ...s, relevance: matchingGenres };
-        })
-        .filter((s: any) => s.relevance > 0) // Only include series with at least one matching genre
-        .sort((a: any, b: any) => {
-          // Sort by relevance (more matching genres first), then by rating for variety
-          if (b.relevance !== a.relevance) return b.relevance - a.relevance;
-          return (b.rating || 0) - (a.rating || 0);
-        })
-        .slice(0, 6)
-        .map(({ relevance, ...s }) => s); // Remove relevance field from result
-
       console.log('Returning series:', series.title, 'with', similarSeries.length, 'similar series');
 
       return NextResponse.json({
         series,
         episodesBySeason,
         similarSeries,
+      }, {
+        headers: {
+          'Cache-Control': 'public, max-age=300, stale-while-revalidate=600',
+        },
       });
     } catch (dbError: any) {
       console.log('Database error:', dbError?.message || 'Unknown error');

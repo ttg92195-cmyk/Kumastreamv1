@@ -93,10 +93,11 @@ export async function GET(request: Request) {
     const collection = searchParams.get('collection');
     const year = searchParams.get('year');
     const limitParam = searchParams.get('limit');
-    const limit = limitParam ? parseInt(limitParam) : 500;
+    const limit = limitParam ? parseInt(limitParam) : 20;
     const offset = parseInt(searchParams.get('offset') || '0');
     const detail = searchParams.get('detail') === 'true';
-    const minimal = searchParams.get('minimal') === 'true'; // New parameter for admin
+    const minimal = searchParams.get('minimal') === 'true'; // For admin dashboard
+    const card = searchParams.get('card') === 'true'; // For home/list pages (card view only)
 
     // Build where clause
     const conditions: any[] = [];
@@ -124,47 +125,60 @@ export async function GET(request: Request) {
     const whereClause = conditions.length > 0 ? { AND: conditions } : {};
 
     // For minimal mode, only select needed fields (much faster)
-    const selectFields = minimal ? {
-      id: true,
-      title: true,
-      year: true,
-      rating: true,
-      poster: true,
-      tmdbId: true,
-      updatedAt: true,
-      genres: true,
-    } : undefined;
+    // For card mode, select only card display fields (no casts/episodes/downloadLinks - saves network transfer)
+    let selectFields: any = undefined;
+    let normalizeFn: any = normalizeSeriesList;
+
+    if (minimal) {
+      selectFields = {
+        id: true, title: true, year: true, rating: true, poster: true,
+        tmdbId: true, updatedAt: true, genres: true,
+      };
+      normalizeFn = normalizeSeriesMinimal;
+    } else if (card) {
+      selectFields = {
+        id: true, title: true, year: true, rating: true, poster: true,
+        genres: true, quality4k: true, quality: true, tags: true,
+        seasons: true, totalEpisodes: true,
+      };
+      normalizeFn = (s: any) => ({
+        id: s.id, title: s.title || 'Unknown', year: s.year || 0, rating: s.rating || 0,
+        poster: s.poster || PLACEHOLDER, genres: s.genres || '',
+        quality4k: Boolean(s.quality4k), quality: s.quality || '', tags: s.tags || '',
+        seasons: s.seasons || 0, totalEpisodes: s.totalEpisodes || 0,
+      });
+    } else if (detail) {
+      normalizeFn = normalizeSeriesDetail;
+    }
+
+    // Determine include based on mode
+    let includeFields: any = undefined;
+    if (!minimal && !card && !detail) {
+      // Default list mode: no includes (just basic series info)
+      includeFields = undefined;
+    } else if (detail) {
+      includeFields = {
+        casts: { take: 10 },
+        episodes: {
+          orderBy: [{ season: 'asc' }, { episode: 'asc' }],
+          include: { downloadLinks: true },
+        },
+      };
+    }
 
     // Get total count and paginated results in parallel
     const [totalCount, dbResult] = await Promise.all([
       db.series.count({ where: whereClause }),
       db.series.findMany({
         where: whereClause,
-        select: selectFields,
-        include: minimal || detail ? undefined : (detail
-          ? {
-              casts: { take: 10 },
-              episodes: {
-                orderBy: [{ season: 'asc' }, { episode: 'asc' }],
-                include: { downloadLinks: true },
-              },
-            }
-          : false),
+        select: selectFields || undefined,
+        include: includeFields,
         orderBy: { updatedAt: 'desc' },
         take: limit,
         skip: offset,
       }),
     ]);
 
-    // Use minimal normalization for admin, list for normal, detail for detail
-    let normalizeFn;
-    if (minimal) {
-      normalizeFn = normalizeSeriesMinimal;
-    } else if (detail) {
-      normalizeFn = normalizeSeriesDetail;
-    } else {
-      normalizeFn = normalizeSeriesList;
-    }
     const series = dbResult.map(normalizeFn);
 
     return NextResponse.json(
@@ -175,7 +189,7 @@ export async function GET(request: Request) {
       },
       {
         headers: {
-          'Cache-Control': 'public, max-age=30, stale-while-revalidate=60',
+          'Cache-Control': 'public, max-age=120, stale-while-revalidate=300',
         },
       }
     );

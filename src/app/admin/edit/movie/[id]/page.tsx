@@ -40,7 +40,6 @@ interface Movie {
   review: string;
   genres: string;
   tags: string;
-  collections: string;
   quality4k: boolean;
   director: string;
   fileSize: string;

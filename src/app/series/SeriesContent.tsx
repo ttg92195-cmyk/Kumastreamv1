@@ -45,6 +45,7 @@ export default function SeriesContent() {
       const params = new URLSearchParams();
       params.set('limit', ITEMS_PER_PAGE.toString());
       params.set('offset', ((currentPage - 1) * ITEMS_PER_PAGE).toString());
+      params.set('card', 'true'); // Only need card data, no casts/episodes/downloadLinks
       if (genreFilter) params.set('genre', genreFilter);
       if (tagFilter) params.set('tag', tagFilter);
       if (searchQuery) params.set('search', searchQuery);

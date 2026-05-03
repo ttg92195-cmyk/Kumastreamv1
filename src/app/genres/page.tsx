@@ -232,28 +232,28 @@ function GenresContent() {
       const actualCollection = isShowCollections ? null : collection;
       
       if (actualTag) {
-        const moviesRes = await fetch(`/api/movies?tag=${encodeURIComponent(actualTag)}&limit=${ITEMS_PER_PAGE}&offset=${offset}`);
+        const moviesRes = await fetch(`/api/movies?tag=${encodeURIComponent(actualTag)}&limit=${ITEMS_PER_PAGE}&offset=${offset}&card=true`);
         if (moviesRes.ok) {
           const data = await moviesRes.json();
           setMovies(data.movies || []);
           setMovieTotal(data.total || 0);
         }
         
-        const seriesRes = await fetch(`/api/series?tag=${encodeURIComponent(actualTag)}&limit=${ITEMS_PER_PAGE}&offset=${offset}`);
+        const seriesRes = await fetch(`/api/series?tag=${encodeURIComponent(actualTag)}&limit=${ITEMS_PER_PAGE}&offset=${offset}&card=true`);
         if (seriesRes.ok) {
           const data = await seriesRes.json();
           setSeries(data.series || []);
           setSeriesTotal(data.total || 0);
         }
       } else if (actualCollection) {
-        const moviesRes = await fetch(`/api/movies?collection=${encodeURIComponent(actualCollection)}&limit=${ITEMS_PER_PAGE}&offset=${offset}`);
+        const moviesRes = await fetch(`/api/movies?collection=${encodeURIComponent(actualCollection)}&limit=${ITEMS_PER_PAGE}&offset=${offset}&card=true`);
         if (moviesRes.ok) {
           const data = await moviesRes.json();
           setMovies(data.movies || []);
           setMovieTotal(data.total || 0);
         }
         
-        const seriesRes = await fetch(`/api/series?collection=${encodeURIComponent(actualCollection)}&limit=${ITEMS_PER_PAGE}&offset=${offset}`);
+        const seriesRes = await fetch(`/api/series?collection=${encodeURIComponent(actualCollection)}&limit=${ITEMS_PER_PAGE}&offset=${offset}&card=true`);
         if (seriesRes.ok) {
           const data = await seriesRes.json();
           setSeries(data.series || []);

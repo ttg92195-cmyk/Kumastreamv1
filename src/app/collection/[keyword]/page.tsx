@@ -245,8 +245,8 @@ function CollectionContent() {
           
           const fetchPromises = universeKeywords.map(async (searchKeyword) => {
             const [moviesRes, seriesRes] = await Promise.all([
-              fetch(`/api/movies?search=${encodeURIComponent(searchKeyword)}&limit=100`),
-              fetch(`/api/series?search=${encodeURIComponent(searchKeyword)}&limit=100`)
+              fetch(`/api/movies?search=${encodeURIComponent(searchKeyword)}&limit=100&card=true`),
+              fetch(`/api/series?search=${encodeURIComponent(searchKeyword)}&limit=100&card=true`)
             ]);
             
             if (moviesRes.ok) {
@@ -277,8 +277,8 @@ function CollectionContent() {
           setAllSeries(series);
         } else {
           const [moviesRes, seriesRes] = await Promise.all([
-            fetch(`/api/movies?search=${encodeURIComponent(keyword)}&limit=100`),
-            fetch(`/api/series?search=${encodeURIComponent(keyword)}&limit=100`)
+            fetch(`/api/movies?search=${encodeURIComponent(keyword)}&limit=100&card=true`),
+            fetch(`/api/series?search=${encodeURIComponent(keyword)}&limit=100&card=true`)
           ]);
           
           if (moviesRes.ok) {

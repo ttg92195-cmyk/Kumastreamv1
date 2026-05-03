@@ -74,52 +74,68 @@ export async function GET(
         console.log('Found database movie:', movie?.title);
       }
 
-      // Get MINIMAL data for similar movies calculation (NOT all data!)
-      // Only select fields needed for display, exclude heavy fields like description, casts, downloadLinks
-      const dbMovies = await db.movie.findMany({
-        select: {
-          id: true,
-          title: true,
-          year: true,
-          rating: true,
-          poster: true,
-          genres: true,
-          quality4k: true,
-          quality: true,
-        },
-      });
+      // Get similar movies - use DB-side filtering to avoid full table scan
+      // Only fetch movies that share at least one genre with the current movie
+      const movieGenres = (movie.genres || '').split(',').filter(Boolean).map((g: string) => g.trim());
+      let similarMovies: any[] = [];
 
-      const allMovies = dbMovies;
+      if (movieGenres.length > 0) {
+        // Build OR conditions for each genre to find matches
+        const genreConditions = movieGenres.map((g: string) => ({
+          genres: { contains: g.trim(), mode: 'insensitive' as const },
+        }));
+
+        const dbSimilar = await db.movie.findMany({
+          where: {
+            AND: [
+              { id: { not: id } },
+              { OR: genreConditions },
+            ],
+          },
+          select: {
+            id: true,
+            title: true,
+            year: true,
+            rating: true,
+            poster: true,
+            genres: true,
+            quality4k: true,
+            quality: true,
+          },
+          orderBy: { rating: 'desc' },
+          take: 30, // Fetch more than needed for better genre matching, then slice to 6
+        });
+
+        // Score and sort by genre relevance
+        const genresLower = movieGenres.map((g: string) => g.toLowerCase());
+        similarMovies = dbSimilar
+          .map((m: any) => {
+            const mGenres = (m.genres || '').split(',').filter(Boolean).map((g: string) => g.trim().toLowerCase());
+            const matchingGenres = genresLower.filter((g: string) => mGenres.includes(g)).length;
+            return { ...m, relevance: matchingGenres };
+          })
+          .sort((a: any, b: any) => {
+            if (b.relevance !== a.relevance) return b.relevance - a.relevance;
+            return (b.rating || 0) - (a.rating || 0);
+          })
+          .slice(0, 6)
+          .map(({ relevance, ...m }: any) => m);
+      }
 
       if (!movie) {
         console.log('Movie not found:', id);
         return NextResponse.json({ error: 'Movie not found', id }, { status: 404 });
       }
 
-      // Get similar movies based on genres - sorted by relevance (more matching genres = higher score)
-      const genres = (movie.genres || '').split(',').filter(Boolean).map((g: string) => g.trim().toLowerCase());
-      
-      const similarMovies = allMovies
-        .filter((m: any) => m.id !== id && m.genres)
-        .map((m: any) => {
-          const movieGenres = (m.genres || '').split(',').filter(Boolean).map((g: string) => g.trim().toLowerCase());
-          const matchingGenres = genres.filter((g: string) => movieGenres.includes(g)).length;
-          return { ...m, relevance: matchingGenres };
-        })
-        .filter((m: any) => m.relevance > 0) // Only include movies with at least one matching genre
-        .sort((a: any, b: any) => {
-          // Sort by relevance (more matching genres first), then by rating for variety
-          if (b.relevance !== a.relevance) return b.relevance - a.relevance;
-          return (b.rating || 0) - (a.rating || 0);
-        })
-        .slice(0, 6)
-        .map(({ relevance, ...m }) => m); // Remove relevance field from result
-
       console.log('Returning movie:', movie.title, 'with', similarMovies.length, 'similar movies');
 
       return NextResponse.json({
         movie,
         similarMovies,
+      }, {
+        headers: {
+          'Cache-Control': 'public, max-age=300, stale-while-revalidate=600',
+        },
       });
     } catch (dbError: any) {
       console.log('Database error:', dbError?.message || 'Unknown error');

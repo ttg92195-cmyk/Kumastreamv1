@@ -38,8 +38,8 @@ export default function HomePage() {
     const fetchData = async () => {
       try {
         const [moviesRes, seriesRes] = await Promise.all([
-          fetch('/api/movies?limit=10'),
-          fetch('/api/series?limit=10')
+          fetch('/api/movies?limit=10&card=true'),
+          fetch('/api/series?limit=10&card=true')
         ]);
 
         const [moviesData, seriesData] = await Promise.all([

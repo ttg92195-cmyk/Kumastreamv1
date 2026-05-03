@@ -66,9 +66,10 @@ export async function GET(request: Request) {
     const collection = searchParams.get('collection');
     const year = searchParams.get('year');
     const limitParam = searchParams.get('limit');
-    const limit = limitParam ? parseInt(limitParam) : 500;
+    const limit = limitParam ? parseInt(limitParam) : 20;
     const offset = parseInt(searchParams.get('offset') || '0');
-    const minimal = searchParams.get('minimal') === 'true'; // New parameter for admin
+    const minimal = searchParams.get('minimal') === 'true'; // For admin dashboard
+    const card = searchParams.get('card') === 'true'; // For home/list pages (card view only)
 
     // Build where clause
     const conditions: any[] = [];
@@ -96,24 +97,35 @@ export async function GET(request: Request) {
     const whereClause = conditions.length > 0 ? { AND: conditions } : {};
 
     // For minimal mode, only select needed fields (much faster)
-    const selectFields = minimal ? {
-      id: true,
-      title: true,
-      year: true,
-      rating: true,
-      poster: true,
-      tmdbId: true,
-      updatedAt: true,
-      genres: true,
-    } : undefined;
+    // For card mode, select only card display fields (no casts/downloadLinks - saves network transfer)
+    let selectFields: any = undefined;
+    let normalizeFn: any = normalizeMovie;
+
+    if (minimal) {
+      selectFields = {
+        id: true, title: true, year: true, rating: true, poster: true,
+        tmdbId: true, updatedAt: true, genres: true,
+      };
+      normalizeFn = normalizeMovieMinimal;
+    } else if (card) {
+      selectFields = {
+        id: true, title: true, year: true, rating: true, poster: true,
+        genres: true, quality4k: true, quality: true, tags: true,
+      };
+      normalizeFn = (m: any) => ({
+        id: m.id, title: m.title || 'Unknown', year: m.year || 0, rating: m.rating || 0,
+        poster: m.poster || PLACEHOLDER, genres: m.genres || '',
+        quality4k: Boolean(m.quality4k), quality: m.quality || '', tags: m.tags || '',
+      });
+    }
 
     // Get total count and paginated results in parallel
     const [totalCount, dbResult] = await Promise.all([
       db.movie.count({ where: whereClause }),
       db.movie.findMany({
         where: whereClause,
-        select: selectFields,
-        include: minimal ? undefined : {
+        select: selectFields || undefined,
+        include: (minimal || card) ? undefined : {
           casts: { take: 10 },
           downloadLinks: true,
         },
@@ -123,8 +135,6 @@ export async function GET(request: Request) {
       }),
     ]);
 
-    // Use minimal normalization for admin, full for others
-    const normalizeFn = minimal ? normalizeMovieMinimal : normalizeMovie;
     const movies = dbResult.map(normalizeFn);
 
     return NextResponse.json(
@@ -135,7 +145,7 @@ export async function GET(request: Request) {
       },
       {
         headers: {
-          'Cache-Control': 'public, max-age=30, stale-while-revalidate=60',
+          'Cache-Control': 'public, max-age=120, stale-while-revalidate=300',
         },
       }
     );

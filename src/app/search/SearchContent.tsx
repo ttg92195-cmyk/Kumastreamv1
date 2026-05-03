@@ -57,8 +57,8 @@ function SearchContent() {
     setLoading(true);
     try {
       const [movieData, seriesData] = await Promise.all([
-        fetch(`/api/movies?search=${encodeURIComponent(q)}&limit=100`).then((res) => res.json()),
-        fetch(`/api/series?search=${encodeURIComponent(q)}&limit=100`).then((res) => res.json()),
+        fetch(`/api/movies?search=${encodeURIComponent(q)}&limit=100&card=true`).then((res) => res.json()),
+        fetch(`/api/series?search=${encodeURIComponent(q)}&limit=100&card=true`).then((res) => res.json()),
       ]);
       setMovies(movieData.movies || []);
       setSeries(seriesData.series || []);

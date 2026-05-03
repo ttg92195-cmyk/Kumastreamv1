@@ -50,7 +50,6 @@ interface Series {
   description: string;
   genres: string;
   tags: string;
-  collections: string;
   quality: string;
   quality4k: boolean;
   seasons: number;
