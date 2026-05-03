@@ -1,8 +1,9 @@
-export const dynamic = 'force-dynamic';
+// ISR: revalidate every 10 minutes instead of force-dynamic
+export const revalidate = 600;
 
 import { NextResponse, NextRequest } from 'next/server';
-import { db } from '@/lib/db';
 import { validateAdminAuth, isValidDownloadUrl, sanitizeError } from '@/lib/auth';
+import { getCachedEpisodeDetail, invalidateEpisodeCache } from '@/lib/cache';
 
 // GET single episode
 export async function GET(
@@ -16,18 +17,17 @@ export async function GET(
       return NextResponse.json({ error: 'Episode ID is required' }, { status: 400 });
     }
 
-    const episode = await db.episode.findUnique({
-      where: { id },
-      include: {
-        downloadLinks: true,
-      },
-    });
+    const episode = await getCachedEpisodeDetail(id);
 
     if (!episode) {
       return NextResponse.json({ error: 'Episode not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ episode });
+    return NextResponse.json({ episode }, {
+      headers: {
+        'Cache-Control': 'public, max-age=300, stale-while-revalidate=600',
+      },
+    });
   } catch (error: any) {
     console.error('Error fetching episode:', error);
     return NextResponse.json(
@@ -57,6 +57,9 @@ export async function PUT(
     console.log('=== Updating Episode ===');
     console.log('Episode ID:', id);
     console.log('Download Links:', body.downloadLinks?.length || 0);
+
+    // Import db directly for mutations (not cached)
+    const { db } = await import('@/lib/db');
 
     // Check if episode exists
     const existingEpisode = await db.episode.findUnique({
@@ -116,6 +119,9 @@ export async function PUT(
       return episode;
     });
 
+    // Invalidate cache after mutation (episode + parent series)
+    invalidateEpisodeCache(id);
+
     console.log('Episode updated successfully with', updatedEpisode.downloadLinks?.length || 0, 'download links');
 
     return NextResponse.json({
@@ -155,11 +161,17 @@ export async function DELETE(
       return NextResponse.json({ error: 'Episode ID is required' }, { status: 400 });
     }
 
+    // Import db directly for mutations (not cached)
+    const { db } = await import('@/lib/db');
+
     // Delete download links and episode in a transaction
     await db.$transaction(async (tx) => {
       await tx.downloadLink.deleteMany({ where: { episodeId: id } });
       await tx.episode.delete({ where: { id } });
     });
+
+    // Invalidate cache after mutation
+    invalidateEpisodeCache(id);
 
     return NextResponse.json({ success: true, message: 'Episode deleted successfully' });
   } catch (error: any) {

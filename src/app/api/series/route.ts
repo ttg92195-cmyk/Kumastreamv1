@@ -1,7 +1,8 @@
-export const dynamic = 'force-dynamic';
+// ISR: revalidate every 5 minutes instead of force-dynamic
+export const revalidate = 300;
 
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { getCachedSeriesList } from '@/lib/cache';
 
 // Placeholder image for missing posters
 const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAwIiBoZWlnaHQ9Ijc1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjIyIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM2NjYiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
@@ -127,6 +128,7 @@ export async function GET(request: Request) {
     // For minimal mode, only select needed fields (much faster)
     // For card mode, select only card display fields (no casts/episodes/downloadLinks - saves network transfer)
     let selectFields: any = undefined;
+    let includeFields: any = undefined;
     let normalizeFn: any = normalizeSeriesList;
 
     if (minimal) {
@@ -148,15 +150,6 @@ export async function GET(request: Request) {
         seasons: s.seasons || 0, totalEpisodes: s.totalEpisodes || 0,
       });
     } else if (detail) {
-      normalizeFn = normalizeSeriesDetail;
-    }
-
-    // Determine include based on mode
-    let includeFields: any = undefined;
-    if (!minimal && !card && !detail) {
-      // Default list mode: no includes (just basic series info)
-      includeFields = undefined;
-    } else if (detail) {
       includeFields = {
         casts: { take: 10 },
         episodes: {
@@ -164,20 +157,17 @@ export async function GET(request: Request) {
           include: { downloadLinks: true },
         },
       };
+      normalizeFn = normalizeSeriesDetail;
     }
 
-    // Get total count and paginated results in parallel
-    const [totalCount, dbResult] = await Promise.all([
-      db.series.count({ where: whereClause }),
-      db.series.findMany({
-        where: whereClause,
-        select: selectFields || undefined,
-        include: includeFields,
-        orderBy: { updatedAt: 'desc' },
-        take: limit,
-        skip: offset,
-      }),
-    ]);
+    // Use cached query — avoids hitting Neon DB on every request
+    const { totalCount, dbResult } = await getCachedSeriesList(
+      whereClause,
+      selectFields,
+      includeFields,
+      limit,
+      offset,
+    );
 
     const series = dbResult.map(normalizeFn);
 

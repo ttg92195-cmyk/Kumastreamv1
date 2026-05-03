@@ -1,8 +1,9 @@
-export const dynamic = 'force-dynamic';
+// ISR: revalidate every 10 minutes instead of force-dynamic
+export const revalidate = 600;
 
 import { NextResponse, NextRequest } from 'next/server';
-import { db } from '@/lib/db';
 import { validateAdminAuth, isValidDownloadUrl, sanitizeError } from '@/lib/auth';
+import { getCachedMovieDetail, getCachedSimilarMovies, invalidateMovieCache } from '@/lib/cache';
 
 // Placeholder image for missing posters
 const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAwIiBoZWlnaHQ9Ijc1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjIyIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM2NjYiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
@@ -59,52 +60,25 @@ export async function GET(
 
     let movie: any = null;
 
-    // Try to fetch from database
+    // Try to fetch from database (uses cached query)
     try {
-      const dbMovie = await db.movie.findUnique({
-        where: { id },
-        include: {
-          casts: true,
-          downloadLinks: true,
-        },
-      });
+      const dbMovie = await getCachedMovieDetail(id);
 
       if (dbMovie) {
         movie = normalizeMovie(dbMovie);
         console.log('Found database movie:', movie?.title);
       }
 
-      // Get similar movies - use DB-side filtering to avoid full table scan
-      // Only fetch movies that share at least one genre with the current movie
+      // Get similar movies (uses cached query)
       const movieGenres = (movie.genres || '').split(',').filter(Boolean).map((g: string) => g.trim());
       let similarMovies: any[] = [];
 
       if (movieGenres.length > 0) {
-        // Build OR conditions for each genre to find matches
         const genreConditions = movieGenres.map((g: string) => ({
           genres: { contains: g.trim(), mode: 'insensitive' as const },
         }));
 
-        const dbSimilar = await db.movie.findMany({
-          where: {
-            AND: [
-              { id: { not: id } },
-              { OR: genreConditions },
-            ],
-          },
-          select: {
-            id: true,
-            title: true,
-            year: true,
-            rating: true,
-            poster: true,
-            genres: true,
-            quality4k: true,
-            quality: true,
-          },
-          orderBy: { rating: 'desc' },
-          take: 30, // Fetch more than needed for better genre matching, then slice to 6
-        });
+        const dbSimilar = await getCachedSimilarMovies(id, genreConditions);
 
         // Score and sort by genre relevance
         const genresLower = movieGenres.map((g: string) => g.toLowerCase());
@@ -166,6 +140,9 @@ export async function DELETE(
 
     console.log('Deleting movie with ID:', id);
 
+    // Import db directly for mutations (not cached)
+    const { db } = await import('@/lib/db');
+
     // Delete related records and movie in a transaction
     await db.$transaction(async (tx) => {
       await tx.downloadLink.deleteMany({ where: { movieId: id } });
@@ -173,13 +150,15 @@ export async function DELETE(
       await tx.movie.delete({ where: { id } });
     });
 
+    // Invalidate cache after mutation
+    invalidateMovieCache(id);
+
     console.log('Movie deleted successfully:', id);
 
     return NextResponse.json({ success: true, message: 'Movie deleted successfully' });
   } catch (error: any) {
     console.error('Error deleting movie:', error);
     
-    // Handle case where movie doesn't exist
     if (error.code === 'P2025') {
       return NextResponse.json({ error: 'Movie not found' }, { status: 404 });
     }
@@ -208,6 +187,9 @@ export async function PUT(
     }
 
     console.log('Updating movie with ID:', id, 'with downloadLinks:', body.downloadLinks?.length || 0);
+
+    // Import db directly for mutations (not cached)
+    const { db } = await import('@/lib/db');
 
     // Update movie and handle download links in a transaction
     const updatedMovie = await db.$transaction(async (tx) => {
@@ -257,6 +239,9 @@ export async function PUT(
 
       return movie;
     });
+
+    // Invalidate cache after mutation
+    invalidateMovieCache(id);
 
     console.log('Movie updated successfully:', id, 'with', updatedMovie.downloadLinks?.length || 0, 'download links');
 

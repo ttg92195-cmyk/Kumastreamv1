@@ -1,7 +1,9 @@
-export const dynamic = 'force-dynamic';
+// ISR: revalidate every 5 minutes instead of force-dynamic
+export const revalidate = 300;
 
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { getCachedMovieList } from '@/lib/cache';
 
 // Placeholder image for missing posters
 const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAwIiBoZWlnaHQ9Ijc1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjIyIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM2NjYiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
@@ -99,6 +101,7 @@ export async function GET(request: Request) {
     // For minimal mode, only select needed fields (much faster)
     // For card mode, select only card display fields (no casts/downloadLinks - saves network transfer)
     let selectFields: any = undefined;
+    let includeFields: any = undefined;
     let normalizeFn: any = normalizeMovie;
 
     if (minimal) {
@@ -117,23 +120,21 @@ export async function GET(request: Request) {
         poster: m.poster || PLACEHOLDER, genres: m.genres || '',
         quality4k: Boolean(m.quality4k), quality: m.quality || '', tags: m.tags || '',
       });
+    } else {
+      includeFields = {
+        casts: { take: 10 },
+        downloadLinks: true,
+      };
     }
 
-    // Get total count and paginated results in parallel
-    const [totalCount, dbResult] = await Promise.all([
-      db.movie.count({ where: whereClause }),
-      db.movie.findMany({
-        where: whereClause,
-        select: selectFields || undefined,
-        include: (minimal || card) ? undefined : {
-          casts: { take: 10 },
-          downloadLinks: true,
-        },
-        orderBy: { updatedAt: 'desc' },
-        take: limit,
-        skip: offset,
-      }),
-    ]);
+    // Use cached query — avoids hitting Neon DB on every request
+    const { totalCount, dbResult } = await getCachedMovieList(
+      whereClause,
+      selectFields,
+      includeFields,
+      limit,
+      offset,
+    );
 
     const movies = dbResult.map(normalizeFn);
 

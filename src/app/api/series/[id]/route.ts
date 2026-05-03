@@ -1,8 +1,9 @@
-export const dynamic = 'force-dynamic';
+// ISR: revalidate every 10 minutes instead of force-dynamic
+export const revalidate = 600;
 
 import { NextResponse, NextRequest } from 'next/server';
-import { db } from '@/lib/db';
 import { validateAdminAuth, isValidDownloadUrl, sanitizeError } from '@/lib/auth';
+import { getCachedSeriesDetail, getCachedSimilarSeries, invalidateSeriesCache } from '@/lib/cache';
 
 // Placeholder image for missing posters
 const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAwIiBoZWlnaHQ9Ijc1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjIyIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM2NjYiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
@@ -74,60 +75,26 @@ export async function GET(
     console.log('Fetching series with ID:', id);
 
     let series: any = null;
-    let allSeries: any[] = [];
 
-    // Try to fetch from database
+    // Try to fetch from database (uses cached query)
     try {
-      const dbSeries = await db.series.findUnique({
-        where: { id },
-        include: {
-          casts: true,
-          episodes: {
-            orderBy: [{ season: 'asc' }, { episode: 'asc' }],
-            include: {
-              downloadLinks: true,
-            },
-          },
-          downloadLinks: true,
-        },
-      });
+      const dbSeries = await getCachedSeriesDetail(id);
 
       if (dbSeries) {
         series = normalizeSeries(dbSeries);
         console.log('Found database series:', series?.title);
       }
 
-      // Get similar series - use DB-side filtering to avoid full table scan
-      // Only fetch series that share at least one genre with the current series
+      // Get similar series (uses cached query)
       const seriesGenres = (series.genres || '').split(',').filter(Boolean).map((g: string) => g.trim());
       let similarSeries: any[] = [];
 
       if (seriesGenres.length > 0) {
-        // Build OR conditions for each genre to find matches
         const genreConditions = seriesGenres.map((g: string) => ({
           genres: { contains: g.trim(), mode: 'insensitive' as const },
         }));
 
-        const dbSimilar = await db.series.findMany({
-          where: {
-            AND: [
-              { id: { not: id } },
-              { OR: genreConditions },
-            ],
-          },
-          select: {
-            id: true,
-            title: true,
-            year: true,
-            rating: true,
-            poster: true,
-            genres: true,
-            quality4k: true,
-            quality: true,
-          },
-          orderBy: { rating: 'desc' },
-          take: 30, // Fetch more than needed for better genre matching, then slice to 6
-        });
+        const dbSimilar = await getCachedSimilarSeries(id, genreConditions);
 
         // Score and sort by genre relevance
         const genresLower = seriesGenres.map((g: string) => g.toLowerCase());
@@ -202,6 +169,9 @@ export async function DELETE(
 
     console.log('Deleting series with ID:', id);
 
+    // Import db directly for mutations (not cached)
+    const { db } = await import('@/lib/db');
+
     // Delete series and all related records in a transaction
     await db.$transaction(async (tx) => {
       // Get all episodes for this series
@@ -238,13 +208,15 @@ export async function DELETE(
       });
     });
 
+    // Invalidate cache after mutation
+    invalidateSeriesCache(id);
+
     console.log('Series deleted successfully:', id);
 
     return NextResponse.json({ success: true, message: 'Series deleted successfully' });
   } catch (error: any) {
     console.error('Error deleting series:', error);
     
-    // Handle case where series doesn't exist
     if (error.code === 'P2025') {
       return NextResponse.json({ error: 'Series not found' }, { status: 404 });
     }
@@ -273,6 +245,9 @@ export async function PUT(
     }
 
     console.log('Updating series with ID:', id, 'with downloadLinks:', body.downloadLinks?.length || 0);
+
+    // Import db directly for mutations (not cached)
+    const { db } = await import('@/lib/db');
 
     // Update series and handle download links in a transaction
     const updatedSeries = await db.$transaction(async (tx) => {
@@ -322,6 +297,9 @@ export async function PUT(
 
       return series;
     });
+
+    // Invalidate cache after mutation
+    invalidateSeriesCache(id);
 
     console.log('Series updated successfully:', id, 'with', updatedSeries.downloadLinks?.length || 0, 'download links');
 

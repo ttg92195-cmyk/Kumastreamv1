@@ -1,4 +1,6 @@
-export const dynamic = 'force-dynamic';
+// Genres are static data - no need for force-dynamic
+// Cache for 1 hour since this data rarely changes
+export const revalidate = 3600;
 
 import { NextResponse } from 'next/server';
 
