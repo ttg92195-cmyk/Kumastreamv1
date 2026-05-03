@@ -3,12 +3,113 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { sanitizeError } from '@/lib/auth';
 
-const TMDB_API_KEY = process.env.TMDB_API_KEY;
-if (!TMDB_API_KEY) throw new Error('TMDB_API_KEY environment variable is not set');
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+
+function getTmdbApiKey() {
+  const key = process.env.TMDB_API_KEY;
+  if (!key) throw new Error('TMDB_API_KEY environment variable is not set');
+  return key;
+}
+
+/**
+ * Fetch TMDB detail with timeout and abort protection
+ */
+async function fetchTMDBDetailWithTimeout(type: string, id: number) {
+  const TMDB_API_KEY = getTmdbApiKey();
+  const detailUrl = `${TMDB_BASE_URL}/${type === 'tv' ? 'tv' : 'movie'}/${id}?api_key=${TMDB_API_KEY}&append_to_response=credits,videos,external_ids,release_dates,content_ratings`;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
+
+  try {
+    const response = await fetch(detailUrl, { signal: controller.signal });
+    clearTimeout(timeout);
+
+    if (!response.ok) return null;
+    return await response.json();
+  } catch {
+    clearTimeout(timeout);
+    return null;
+  }
+}
+
+/**
+ * Process a single TMDB item's details into the result format
+ */
+function processTMDBDetails(item: any, details: any, type: string) {
+  // Get certification/rating
+  let certification = '';
+  if (type === 'movie' && details.release_dates?.results) {
+    const usRelease = details.release_dates.results.find((r: any) => r.iso_3166_1 === 'US');
+    if (usRelease?.release_dates?.[0]?.certification) {
+      certification = usRelease.release_dates[0].certification;
+    }
+  } else if (type === 'tv' && details.content_ratings?.results) {
+    const usRating = details.content_ratings.results.find((r: any) => r.iso_3166_1 === 'US');
+    if (usRating?.rating) {
+      certification = usRating.rating;
+    }
+  }
+
+  // Get trailer
+  const trailer = details.videos?.results?.find(
+    (v: any) => v.type === 'Trailer' && v.site === 'YouTube'
+  );
+
+  return {
+    id: item.id,
+    title: item.title || item.name,
+    originalTitle: item.original_title || item.original_name,
+    year: parseInt((item.release_date || item.first_air_date || '').split('-')[0]) || 0,
+    poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
+    backdrop: item.backdrop_path ? `https://image.tmdb.org/t/p/original${item.backdrop_path}` : null,
+    rating: item.vote_average || 0,
+    voteCount: item.vote_count || 0,
+    overview: item.overview || '',
+    genres: details.genres?.map((g: any) => g.name).join(', ') || '',
+    genreIds: details.genres?.map((g: any) => g.id) || [],
+    type: type,
+    // Movie specific
+    duration: details.runtime || 0,
+    budget: details.budget || 0,
+    revenue: details.revenue || 0,
+    status: details.status || '',
+    tagline: details.tagline || '',
+    // TV specific
+    seasons: details.number_of_seasons || 0,
+    totalEpisodes: details.number_of_episodes || 0,
+    episodeRunTime: details.episode_run_time || [],
+    firstAirDate: details.first_air_date || '',
+    lastAirDate: details.last_air_date || '',
+    networks: details.networks?.map((n: any) => n.name) || [],
+    // Cast (all available, not just 10)
+    casts: details.credits?.cast?.map((c: any) => ({
+      name: c.name,
+      role: c.character,
+      photo: c.profile_path ? `https://image.tmdb.org/t/p/w185${c.profile_path}` : null,
+    })) || [],
+    // Crew
+    director: details.credits?.crew?.find((c: any) => c.job === 'Director')?.name || '',
+    writers: details.credits?.crew?.filter((c: any) => c.department === 'Writing').map((c: any) => c.name).slice(0, 3) || [],
+    // External IDs
+    imdbId: details.external_ids?.imdb_id || '',
+    tvdbId: details.external_ids?.tvdb_id || null,
+    // Video
+    trailer: trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : null,
+    // Certification
+    certification,
+    // Languages
+    originalLanguage: details.original_language || '',
+    spokenLanguages: details.spoken_languages?.map((l: any) => l.english_name) || [],
+    // Production
+    productionCompanies: details.production_companies?.map((c: any) => c.name) || [],
+    productionCountries: details.production_countries?.map((c: any) => c.name) || [],
+  };
+}
 
 export async function GET(request: Request) {
   try {
+    const TMDB_API_KEY = getTmdbApiKey();
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || 'movie';
     const year = searchParams.get('year');
@@ -30,10 +131,10 @@ export async function GET(request: Request) {
     if (query) {
       // Search by query - fetch multiple pages if needed
       const pagesNeeded = Math.ceil(limit / 20);
-      
+
       for (let page = 1; page <= pagesNeeded; page++) {
         let url = `${TMDB_BASE_URL}/search/${type}?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&page=${page}`;
-        
+
         // Add filters to search
         if (year) {
           url += `&primary_release_year=${year}`;
@@ -41,17 +142,17 @@ export async function GET(request: Request) {
         if (language) {
           url += `&with_original_language=${language}`;
         }
-        
+
         console.log(`Searching TMDB page ${page}:`, url);
-        
+
         const response = await fetch(url);
         if (!response.ok) {
           console.error(`TMDB API error on page ${page}: ${response.status}`);
           continue;
         }
-        
+
         const data = await response.json();
-        
+
         // Filter by genre if specified
         let filteredResults = data.results || [];
         if (genre) {
@@ -62,7 +163,7 @@ export async function GET(request: Request) {
               const genreData = await genreResponse.json();
               const genreItem = genreData.genres?.find((g: any) => g.name.toLowerCase() === genre.toLowerCase());
               if (genreItem) {
-                filteredResults = filteredResults.filter((item: any) => 
+                filteredResults = filteredResults.filter((item: any) =>
                   item.genre_ids?.includes(genreItem.id)
                 );
               }
@@ -71,25 +172,25 @@ export async function GET(request: Request) {
             console.error('Failed to filter by genre:', genreError);
           }
         }
-        
+
         results = [...results, ...filteredResults];
-        
+
         // Stop if no more results
         if (!data.results || data.results.length === 0) break;
         // Stop if we have enough
         if (results.length >= limit) break;
       }
-      
+
       results = results.slice(0, limit);
       console.log(`Found ${results.length} results for query: ${query}`);
     } else {
       // Discover with filters
       let baseUrl = `${TMDB_BASE_URL}/discover/${type}?api_key=${TMDB_API_KEY}&sort_by=${sort}`;
-      
+
       if (year) {
         baseUrl += `&primary_release_year=${year}`;
       }
-      
+
       if (genre) {
         try {
           const genreUrl = `${TMDB_BASE_URL}/genre/${type}/list?api_key=${TMDB_API_KEY}`;
@@ -119,25 +220,25 @@ export async function GET(request: Request) {
       // Calculate pages needed (TMDB returns 20 per page)
       const pagesNeeded = Math.ceil(limit / 20);
       console.log(`Fetching ${pagesNeeded} pages for ${limit} items`);
-      
+
       for (let page = 1; page <= pagesNeeded; page++) {
         const pageUrl = `${baseUrl}&page=${page}`;
         const response = await fetch(pageUrl);
-        
+
         if (!response.ok) {
           console.error(`Failed to fetch page ${page}: ${response.status}`);
           continue;
         }
-        
+
         const data = await response.json();
         results = [...results, ...(data.results || [])];
-        
+
         // Stop if no more results
         if (!data.results || data.results.length === 0) break;
       }
-      
+
       results = results.slice(0, limit);
-      
+
       // Deduplicate by ID
       const seenIds = new Set<number>();
       results = results.filter((item: any) => {
@@ -145,116 +246,45 @@ export async function GET(request: Request) {
         seenIds.add(item.id);
         return true;
       });
-      
+
       console.log(`Total results after dedup: ${results.length}`);
     }
 
-    // Fetch additional details for each result
-    const detailedResults = [];
-    
-    // Deduplicate again for detailed results by ID
+    // ===== OPTIMIZED: Fetch details in parallel with concurrency limit =====
+    // Deduplicate by ID
     const detailedIds = new Set<number>();
-    
-    console.log('Fetching detailed info for each result...');
-    
-    for (let i = 0; i < results.length; i++) {
-      const item = results[i];
-      
-      // Skip if already processed (extra safety)
-      if (detailedIds.has(item.id)) {
-        console.log(`Skipping duplicate ID: ${item.id}`);
-        continue;
-      }
+    const uniqueResults = results.filter((item: any) => {
+      if (detailedIds.has(item.id)) return false;
       detailedIds.add(item.id);
-      
-      try {
-        // Add small delay every 10 requests to avoid rate limiting
-        if (i > 0 && i % 10 === 0) {
-          await new Promise(resolve => setTimeout(resolve, 100));
+      return true;
+    });
+
+    console.log(`Fetching detailed info for ${uniqueResults.length} results (parallel)...`);
+
+    // Process in batches of 5 to avoid TMDB rate limiting
+    const DETAIL_BATCH_SIZE = 5;
+    const detailedResults: any[] = [];
+
+    for (let i = 0; i < uniqueResults.length; i += DETAIL_BATCH_SIZE) {
+      const batch = uniqueResults.slice(i, i + DETAIL_BATCH_SIZE);
+
+      const detailPromises = batch.map(async (item: any) => {
+        try {
+          const details = await fetchTMDBDetailWithTimeout(type, item.id);
+          if (!details) return null;
+          return processTMDBDetails(item, details, type);
+        } catch (e) {
+          console.error(`Error processing item ${item.id}:`, e);
+          return null;
         }
-        
-        // Fetch full details including credits and videos
-        const detailUrl = `${TMDB_BASE_URL}/${type}/${item.id}?api_key=${TMDB_API_KEY}&append_to_response=credits,videos,external_ids,release_dates,content_ratings`;
-        const response = await fetch(detailUrl);
-        
-        if (!response.ok) {
-          console.error(`Failed to fetch details for ${item.id}: ${response.status}`);
-          continue;
+      });
+
+      const batchResults = await Promise.all(detailPromises);
+
+      for (const result of batchResults) {
+        if (result) {
+          detailedResults.push(result);
         }
-        
-        const details = await response.json();
-        
-        // Get certification/rating
-        let certification = '';
-        if (type === 'movie' && details.release_dates?.results) {
-          const usRelease = details.release_dates.results.find((r: any) => r.iso_3166_1 === 'US');
-          if (usRelease?.release_dates?.[0]?.certification) {
-            certification = usRelease.release_dates[0].certification;
-          }
-        } else if (type === 'tv' && details.content_ratings?.results) {
-          const usRating = details.content_ratings.results.find((r: any) => r.iso_3166_1 === 'US');
-          if (usRating?.rating) {
-            certification = usRating.rating;
-          }
-        }
-        
-        // Get trailer
-        const trailer = details.videos?.results?.find(
-          (v: any) => v.type === 'Trailer' && v.site === 'YouTube'
-        );
-        
-        detailedResults.push({
-          id: item.id,
-          title: item.title || item.name,
-          originalTitle: item.original_title || item.original_name,
-          year: parseInt((item.release_date || item.first_air_date || '').split('-')[0]) || 0,
-          poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
-          backdrop: item.backdrop_path ? `https://image.tmdb.org/t/p/original${item.backdrop_path}` : null,
-          rating: item.vote_average || 0,
-          voteCount: item.vote_count || 0,
-          overview: item.overview || '',
-          genres: details.genres?.map((g: any) => g.name).join(', ') || '',
-          genreIds: details.genres?.map((g: any) => g.id) || [],
-          type: type,
-          // Movie specific
-          duration: details.runtime || 0,
-          budget: details.budget || 0,
-          revenue: details.revenue || 0,
-          status: details.status || '',
-          tagline: details.tagline || '',
-          // TV specific
-          seasons: details.number_of_seasons || 0,
-          totalEpisodes: details.number_of_episodes || 0,
-          episodeRunTime: details.episode_run_time || [],
-          firstAirDate: details.first_air_date || '',
-          lastAirDate: details.last_air_date || '',
-          networks: details.networks?.map((n: any) => n.name) || [],
-          // Cast (all available, not just 10)
-          casts: details.credits?.cast?.map((c: any) => ({
-            name: c.name,
-            role: c.character,
-            photo: c.profile_path ? `https://image.tmdb.org/t/p/w185${c.profile_path}` : null,
-          })) || [],
-          // Crew
-          director: details.credits?.crew?.find((c: any) => c.job === 'Director')?.name || '',
-          writers: details.credits?.crew?.filter((c: any) => c.department === 'Writing').map((c: any) => c.name).slice(0, 3) || [],
-          // External IDs
-          imdbId: details.external_ids?.imdb_id || '',
-          tvdbId: details.external_ids?.tvdb_id || null,
-          // Video
-          trailer: trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : null,
-          // Certification
-          certification,
-          // Languages
-          originalLanguage: details.original_language || '',
-          spokenLanguages: details.spoken_languages?.map((l: any) => l.english_name) || [],
-          // Production
-          productionCompanies: details.production_companies?.map((c: any) => c.name) || [],
-          productionCountries: details.production_countries?.map((c: any) => c.name) || [],
-        });
-        
-      } catch (e) {
-        console.error(`Error processing item ${item.id}:`, e);
       }
     }
 
@@ -268,7 +298,7 @@ export async function GET(request: Request) {
     });
   } catch (error: any) {
     console.error('TMDB search error:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: sanitizeError(error, 'Failed to fetch from TMDB'),
     }, { status: 500 });
   }
