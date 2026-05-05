@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
-import { sanitizeError } from '@/lib/auth';
+import { NextResponse, NextRequest } from 'next/server';
+import { validateAdminAuth, sanitizeError } from '@/lib/auth';
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
@@ -11,8 +11,12 @@ function getTmdbApiKey() {
   return key;
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
+    // 🔐 Admin authentication required for TMDB API access
+    const authResult = validateAdminAuth(request);
+    if (!authResult.authorized) return authResult.response!;
+
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || 'movie';
 

@@ -1,9 +1,9 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import bcrypt from 'bcryptjs';
-import { sanitizeError } from '@/lib/auth';
+import { sanitizeError, validateAdminAuth } from '@/lib/auth';
 
 // Execute a single SQL statement
 async function executeSQL(sql: string, description: string) {
@@ -24,12 +24,24 @@ async function executeSQL(sql: string, description: string) {
 }
 
 export async function GET(request: Request) {
-  // Require setup secret for authentication
+  // 🔐 Authentication: Accept either admin auth OR setup secret
+  // Setup secret is needed for initial setup when no admin user exists yet
+  // After initial setup, admin auth should be used instead
   const { searchParams } = new URL(request.url);
   const setupSecret = searchParams.get('secret');
 
-  if (!setupSecret || setupSecret !== process.env.SETUP_SECRET) {
-    return NextResponse.json({ error: 'Unauthorized. Provide ?secret=SETUP_SECRET' }, { status: 401 });
+  // Check admin auth first (preferred method)
+  const authResult = validateAdminAuth(request as NextRequest);
+  const isAdmin = authResult.authorized;
+
+  // If not admin, check setup secret
+  const hasSetupSecret = setupSecret && setupSecret === process.env.SETUP_SECRET;
+
+  if (!isAdmin && !hasSetupSecret) {
+    return NextResponse.json({
+      error: 'Unauthorized. Provide admin auth or ?secret=SETUP_SECRET',
+      code: 'AUTH_REQUIRED',
+    }, { status: 401 });
   }
 
   console.log('[setup] Database Setup Started');
@@ -278,8 +290,18 @@ export async function GET(request: Request) {
     );
 
     // Create admin user using parameterized query (fixes SQL injection)
-    const adminUsername = process.env.ADMIN_USERNAME || 'Admin8676';
-    const adminPassword = process.env.ADMIN_PASSWORD || 'Admin8676';
+    // Use the same secure credential logic as auth.ts
+    const { username: adminUsername, password: adminPassword } = (() => {
+      const u = process.env.ADMIN_USERNAME;
+      const p = process.env.ADMIN_PASSWORD;
+      if (!u || !p) {
+        const crypto = require('crypto');
+        const derivedKey = process.env.DATABASE_URL || process.env.POSTGRES_PRISMA_URL || 'fallback';
+        const hash = crypto.createHash('sha256').update(derivedKey).digest('hex').substring(0, 12);
+        return { username: `admin_${hash.substring(0, 6)}`, password: hash };
+      }
+      return { username: u, password: p };
+    })();
 
     try {
       const hashedPassword = await bcrypt.hash(adminPassword, 10);

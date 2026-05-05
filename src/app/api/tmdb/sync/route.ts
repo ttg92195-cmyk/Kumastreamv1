@@ -93,6 +93,10 @@ async function fetchSeasonsEpisodes(tmdbId: number, totalSeasons: number) {
  */
 export async function GET(request: Request) {
   try {
+    // 🔐 Admin authentication required for sync status
+    const authResult = validateAdminAuth(request as NextRequest);
+    if (!authResult.authorized) return authResult.response!;
+
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action') || 'status';
 

@@ -1,11 +1,20 @@
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
-import { generateAuthToken } from '@/lib/auth';
+import { generateAuthToken, validateCredentials } from '@/lib/auth';
+import { checkRateLimit, getClientIp, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit';
 
 export async function POST(request: Request) {
   try {
-    const { username, password } = await request.json();
+    // Rate limiting - 5 login attempts per 15 minutes per IP
+    const clientIp = getClientIp(request);
+    const rateLimitResult = checkRateLimit(clientIp, RATE_LIMITS.LOGIN);
+    if (!rateLimitResult.allowed) {
+      return rateLimitResponse(rateLimitResult);
+    }
+
+    const body = await request.json();
+    const { username, password } = body;
 
     if (!username || !password) {
       return NextResponse.json(
@@ -14,18 +23,17 @@ export async function POST(request: Request) {
       );
     }
 
-    // Read credentials from environment variables
-    const adminUsername = process.env.ADMIN_USERNAME || 'Admin8676';
-    const adminPassword = process.env.ADMIN_PASSWORD || 'Admin8676';
+    // Validate credentials using the secure auth module
+    const result = validateCredentials(username, password);
 
-    if (username === adminUsername && password === adminPassword) {
-      // Generate a token for subsequent API calls
+    if (result.valid) {
+      // Generate a secure HMAC-based token
       const token = generateAuthToken(username, password);
 
       return NextResponse.json({
         user: {
           id: 'admin-1',
-          username: adminUsername,
+          username: result.username,
           isAdmin: true,
         },
         token,

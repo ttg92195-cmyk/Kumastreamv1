@@ -373,9 +373,12 @@ export async function POST(request: Request) {
   }
 }
 
-// GET all TMDB imported items - Optimized with select instead of include
-export async function GET() {
+// GET all TMDB imported items - Requires admin auth
+export async function GET(request: Request) {
   try {
+    // 🔐 Admin authentication required
+    const authResult = validateAdminAuth(request as NextRequest);
+    if (!authResult.authorized) return authResult.response!;
     const [movies, series, totalMovies, totalSeries] = await Promise.all([
       db.movie.findMany({
         where: { tmdbId: { not: null } },

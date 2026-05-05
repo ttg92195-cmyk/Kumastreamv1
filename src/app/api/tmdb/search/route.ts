@@ -1,7 +1,8 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
-import { sanitizeError } from '@/lib/auth';
+import { NextResponse, NextRequest } from 'next/server';
+import { validateAdminAuth, sanitizeError } from '@/lib/auth';
+import { checkRateLimit, getClientIp, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit';
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
@@ -107,8 +108,18 @@ function processTMDBDetails(item: any, details: any, type: string) {
   };
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
+    // 🔐 Admin authentication required for TMDB API access
+    const authResult = validateAdminAuth(request);
+    if (!authResult.authorized) return authResult.response!;
+
+    // Rate limiting - 30 TMDB requests per minute per user
+    const rateLimitResult = checkRateLimit(authResult.username || getClientIp(request), RATE_LIMITS.TMDB);
+    if (!rateLimitResult.allowed) {
+      return rateLimitResponse(rateLimitResult);
+    }
+
     const TMDB_API_KEY = getTmdbApiKey();
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || 'movie';

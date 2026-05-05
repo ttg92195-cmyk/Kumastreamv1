@@ -1,9 +1,14 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
+import { validateAdminAuth } from '@/lib/auth';
 import { db, checkDatabaseConnection } from '@/lib/db';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // 🔐 Admin authentication required - health endpoint exposes DB info
+  const authResult = validateAdminAuth(request);
+  if (!authResult.authorized) return authResult.response!;
+
   const health = {
     status: 'ok',
     timestamp: new Date().toISOString(),
