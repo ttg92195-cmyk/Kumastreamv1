@@ -161,7 +161,23 @@ function BookmarkContent() {
 
 export default function BookmarkPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#0f0f0f] pb-20">
+        <Header title="Bookmark" showSearch={false} />
+        <div className="p-4">
+          <div className="h-4 w-20 bg-gray-800 rounded animate-pulse mb-4" />
+          <div className="grid grid-cols-3 gap-2">
+            {[...Array(30)].map((_, i) => (
+              <div key={i}>
+                <div className="aspect-[2/3] bg-gray-800 rounded-md animate-pulse" />
+                <div className="mt-1.5 h-3 bg-gray-800 rounded animate-pulse w-4/5" />
+                <div className="mt-1 h-2.5 bg-gray-800 rounded animate-pulse w-1/3" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    }>
       <BookmarkContent />
     </Suspense>
   );

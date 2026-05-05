@@ -133,7 +133,17 @@ export default function SeriesContent() {
           </div>
         )}
 
-        {loading ? null : series.length === 0 ? (
+        {loading ? (
+          <div className="grid grid-cols-4 gap-2">
+            {[...Array(20)].map((_, i) => (
+              <div key={i}>
+                <div className="aspect-[2/3] bg-gray-800 rounded-md animate-pulse" />
+                <div className="mt-1.5 h-3 bg-gray-800 rounded animate-pulse w-4/5" />
+                <div className="mt-1 h-2.5 bg-gray-800 rounded animate-pulse w-1/3" />
+              </div>
+            ))}
+          </div>
+        ) : series.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-gray-400 text-lg">
               {activeFilter || searchQuery ? `No series found for "${activeFilter || searchQuery}"` : 'No series found'}
