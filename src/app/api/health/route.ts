@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse, NextRequest } from 'next/server';
 import { validateAdminAuth } from '@/lib/auth';
-import { db, checkDatabaseConnection } from '@/lib/db';
+import { dbRead, checkDatabaseConnection, verifySSLConfig } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   // 🔐 Admin authentication required - health endpoint exposes DB info
@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
     },
     environment: {
       hasDatabaseUrl: !!(process.env.POSTGRES_PRISMA_URL || process.env.DATABASE_URL),
+      hasReadOnlyUrl: !!process.env.DATABASE_READ_ONLY_URL,
       nodeEnv: process.env.NODE_ENV,
     },
   };
@@ -50,10 +51,13 @@ export async function GET(request: NextRequest) {
 
     // Check if tables exist by trying to count
     try {
-      const movieCount = await db.movie.count();
-      const seriesCount = await db.series.count();
+      const movieCount = await dbRead.movie.count();
+      const seriesCount = await dbRead.series.count();
 
       health.database.tablesExist = true;
+
+      // Check SSL and connection pooling status
+      const sslCheck = verifySSLConfig();
 
       return NextResponse.json({
         ...health,
@@ -61,6 +65,12 @@ export async function GET(request: NextRequest) {
         stats: {
           movies: movieCount,
           series: seriesCount,
+        },
+        security: {
+          ssl: sslCheck.readWrite,
+          connectionPooling: !!process.env.POSTGRES_PRISMA_URL,
+          readOnlyUser: !!process.env.DATABASE_READ_ONLY_URL,
+          warnings: sslCheck.warnings.length > 0 ? sslCheck.warnings : undefined,
         },
         message: 'Database is fully operational!',
       });

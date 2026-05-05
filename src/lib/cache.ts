@@ -18,7 +18,11 @@
  */
 
 import { unstable_cache, revalidateTag } from 'next/cache';
-import { db } from '@/lib/db';
+import { dbRead } from '@/lib/db';
+
+// SECURITY: All cached read queries use dbRead (read-only client).
+// This ensures public endpoints can never mutate data even if
+// a vulnerability allows arbitrary code execution.
 
 // ─── Revalidation periods (seconds) ─────────────────────────────
 const LIST_REVALIDATE   = 300;  // 5 min  — movie/series lists
@@ -36,8 +40,8 @@ export const getCachedMovieList = unstable_cache(
     offset: number,
   ) => {
     const [totalCount, dbResult] = await Promise.all([
-      db.movie.count({ where: whereClause }),
-      db.movie.findMany({
+      dbRead.movie.count({ where: whereClause }),
+      dbRead.movie.findMany({
         where: whereClause,
         select: selectFields || undefined,
         include: includeFields || undefined,
@@ -55,7 +59,7 @@ export const getCachedMovieList = unstable_cache(
 // ─── Cached Query: Movie Detail ─────────────────────────────────
 export const getCachedMovieDetail = unstable_cache(
   async (id: string) => {
-    return db.movie.findUnique({
+    return dbRead.movie.findUnique({
       where: { id },
       include: {
         casts: true,
@@ -70,7 +74,7 @@ export const getCachedMovieDetail = unstable_cache(
 // ─── Cached Query: Similar Movies ───────────────────────────────
 export const getCachedSimilarMovies = unstable_cache(
   async (id: string, genreConditions: any[]) => {
-    return db.movie.findMany({
+    return dbRead.movie.findMany({
       where: {
         AND: [
           { id: { not: id } },
@@ -105,8 +109,8 @@ export const getCachedSeriesList = unstable_cache(
     offset: number,
   ) => {
     const [totalCount, dbResult] = await Promise.all([
-      db.series.count({ where: whereClause }),
-      db.series.findMany({
+      dbRead.series.count({ where: whereClause }),
+      dbRead.series.findMany({
         where: whereClause,
         select: selectFields || undefined,
         include: includeFields || undefined,
@@ -124,7 +128,7 @@ export const getCachedSeriesList = unstable_cache(
 // ─── Cached Query: Series Detail ────────────────────────────────
 export const getCachedSeriesDetail = unstable_cache(
   async (id: string) => {
-    return db.series.findUnique({
+    return dbRead.series.findUnique({
       where: { id },
       include: {
         casts: true,
@@ -145,7 +149,7 @@ export const getCachedSeriesDetail = unstable_cache(
 // ─── Cached Query: Similar Series ───────────────────────────────
 export const getCachedSimilarSeries = unstable_cache(
   async (id: string, genreConditions: any[]) => {
-    return db.series.findMany({
+    return dbRead.series.findMany({
       where: {
         AND: [
           { id: { not: id } },
@@ -173,7 +177,7 @@ export const getCachedSimilarSeries = unstable_cache(
 // ─── Cached Query: Episode Detail ───────────────────────────────
 export const getCachedEpisodeDetail = unstable_cache(
   async (id: string) => {
-    return db.episode.findUnique({
+    return dbRead.episode.findUnique({
       where: { id },
       include: {
         downloadLinks: true,
@@ -204,14 +208,14 @@ export const getCachedMovieBySlug = unstable_cache(
   async (slug: string) => {
     const title = slugToTitle(slug);
     // Try exact title match first, then partial match
-    const exact = await db.movie.findFirst({
+    const exact = await dbRead.movie.findFirst({
       where: { title: { equals: title, mode: 'insensitive' } },
       include: { casts: true, downloadLinks: true },
     });
     if (exact) return exact;
 
     // Try partial match (slug might not match full title)
-    return db.movie.findFirst({
+    return dbRead.movie.findFirst({
       where: { title: { contains: title, mode: 'insensitive' } },
       include: { casts: true, downloadLinks: true },
     });
@@ -224,7 +228,7 @@ export const getCachedSeriesBySlug = unstable_cache(
   async (slug: string) => {
     const title = slugToTitle(slug);
     // Try exact title match first, then partial match
-    const exact = await db.series.findFirst({
+    const exact = await dbRead.series.findFirst({
       where: { title: { equals: title, mode: 'insensitive' } },
       include: {
         casts: true,
@@ -238,7 +242,7 @@ export const getCachedSeriesBySlug = unstable_cache(
     if (exact) return exact;
 
     // Try partial match
-    return db.series.findFirst({
+    return dbRead.series.findFirst({
       where: { title: { contains: title, mode: 'insensitive' } },
       include: {
         casts: true,
