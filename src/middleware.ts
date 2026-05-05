@@ -122,49 +122,13 @@ export async function middleware(request: NextRequest) {
   }
 
   // ============================================================
-  // 4. SECURITY HEADERS for ALL responses
+  // 4. SECURITY HEADERS for dynamic responses
+  // Note: Base security headers (CSP, HSTS, X-Frame-Options, etc.)
+  // are set in next.config.ts headers() which covers ALL responses
+  // including static files. Middleware adds additional dynamic
+  // headers (rate limits, cache overrides, etc.) here.
   // ============================================================
   const response = NextResponse.next();
-
-  // Core security headers
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-XSS-Protection', '1; mode=block');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set(
-    'Permissions-Policy',
-    'camera=(), microphone=(), geolocation=()'
-  );
-
-  // Strict Transport Security (HSTS) - enforce HTTPS
-  // max-age=1 year, include subdomains, preload
-  response.headers.set(
-    'Strict-Transport-Security',
-    'max-age=31536000; includeSubDomains; preload'
-  );
-
-  // Content Security Policy (CSP) - prevent XSS and injection
-  response.headers.set(
-    'Content-Security-Policy',
-    [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // unsafe-inline/eval needed for Next.js
-      "style-src 'self' 'unsafe-inline'",                  // unsafe-inline needed for Tailwind
-      "img-src 'self' data: https://image.tmdb.org https://via.placeholder.com blob:",
-      "font-src 'self' data:",
-      "connect-src 'self' https://api.themoviedb.org https://*.vercel.app",
-      "media-src 'self' blob:",
-      "object-src 'none'",
-      "base-uri 'self'",
-      "form-action 'self'",
-      "frame-ancestors 'none'",
-    ].join('; ')
-  );
-
-  // Cross-Origin policies
-  response.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
-  response.headers.set('Cross-Origin-Resource-Policy', 'same-origin');
-  response.headers.set('Cross-Origin-Embedder-Policy', 'unsafe-none'); // Allow TMDB images
 
   // ============================================================
   // 5. PROTECT ADMIN PAGES with server-side auth check
