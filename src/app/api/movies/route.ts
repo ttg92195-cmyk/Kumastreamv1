@@ -2,7 +2,6 @@
 export const revalidate = 300;
 
 import { NextResponse } from 'next/server';
-import { dbRead } from '@/lib/db';
 import { getCachedMovieList } from '@/lib/cache';
 
 // Placeholder image for missing posters

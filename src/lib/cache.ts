@@ -5,6 +5,11 @@
  * so repeated requests within the revalidation period do NOT hit Neon DB,
  * dramatically reducing Network Transfer.
  *
+ * SECURITY: All cached read queries use safeRead() which tries dbRead first
+ * (read-only client), and falls back to db (read-write client) if the
+ * read-only connection fails. This ensures the site ALWAYS works even if
+ * DATABASE_READ_ONLY_URL is misconfigured.
+ *
  * Cache Tags:
  *   - 'movies'       → all movie list queries
  *   - 'movie-{id}'   → a specific movie detail
@@ -18,11 +23,7 @@
  */
 
 import { unstable_cache, revalidateTag } from 'next/cache';
-import { dbRead } from '@/lib/db';
-
-// SECURITY: All cached read queries use dbRead (read-only client).
-// This ensures public endpoints can never mutate data even if
-// a vulnerability allows arbitrary code execution.
+import { safeRead } from '@/lib/db';
 
 // ─── Revalidation periods (seconds) ─────────────────────────────
 const LIST_REVALIDATE   = 300;  // 5 min  — movie/series lists
@@ -39,17 +40,20 @@ export const getCachedMovieList = unstable_cache(
     limit: number,
     offset: number,
   ) => {
-    const [totalCount, dbResult] = await Promise.all([
-      dbRead.movie.count({ where: whereClause }),
-      dbRead.movie.findMany({
-        where: whereClause,
-        select: selectFields || undefined,
-        include: includeFields || undefined,
-        orderBy: { updatedAt: 'desc' },
-        take: limit,
-        skip: offset,
-      }),
-    ]);
+    const [totalCount, dbResult] = await safeRead(async (client) => {
+      const [count, results] = await Promise.all([
+        client.movie.count({ where: whereClause }),
+        client.movie.findMany({
+          where: whereClause,
+          select: selectFields || undefined,
+          include: includeFields || undefined,
+          orderBy: { updatedAt: 'desc' },
+          take: limit,
+          skip: offset,
+        }),
+      ]);
+      return [count, results];
+    });
     return { totalCount, dbResult };
   },
   ['movies-list'],
@@ -59,13 +63,13 @@ export const getCachedMovieList = unstable_cache(
 // ─── Cached Query: Movie Detail ─────────────────────────────────
 export const getCachedMovieDetail = unstable_cache(
   async (id: string) => {
-    return dbRead.movie.findUnique({
+    return safeRead(client => client.movie.findUnique({
       where: { id },
       include: {
         casts: true,
         downloadLinks: true,
       },
-    });
+    }));
   },
   ['movies-detail'],
   { revalidate: DETAIL_REVALIDATE, tags: ['movies'] },
@@ -74,7 +78,7 @@ export const getCachedMovieDetail = unstable_cache(
 // ─── Cached Query: Similar Movies ───────────────────────────────
 export const getCachedSimilarMovies = unstable_cache(
   async (id: string, genreConditions: any[]) => {
-    return dbRead.movie.findMany({
+    return safeRead(client => client.movie.findMany({
       where: {
         AND: [
           { id: { not: id } },
@@ -93,7 +97,7 @@ export const getCachedSimilarMovies = unstable_cache(
       },
       orderBy: { rating: 'desc' },
       take: 30,
-    });
+    }));
   },
   ['movies-similar'],
   { revalidate: SIMILAR_REVALIDATE, tags: ['movies'] },
@@ -108,17 +112,20 @@ export const getCachedSeriesList = unstable_cache(
     limit: number,
     offset: number,
   ) => {
-    const [totalCount, dbResult] = await Promise.all([
-      dbRead.series.count({ where: whereClause }),
-      dbRead.series.findMany({
-        where: whereClause,
-        select: selectFields || undefined,
-        include: includeFields || undefined,
-        orderBy: { updatedAt: 'desc' },
-        take: limit,
-        skip: offset,
-      }),
-    ]);
+    const [totalCount, dbResult] = await safeRead(async (client) => {
+      const [count, results] = await Promise.all([
+        client.series.count({ where: whereClause }),
+        client.series.findMany({
+          where: whereClause,
+          select: selectFields || undefined,
+          include: includeFields || undefined,
+          orderBy: { updatedAt: 'desc' },
+          take: limit,
+          skip: offset,
+        }),
+      ]);
+      return [count, results];
+    });
     return { totalCount, dbResult };
   },
   ['series-list'],
@@ -128,7 +135,7 @@ export const getCachedSeriesList = unstable_cache(
 // ─── Cached Query: Series Detail ────────────────────────────────
 export const getCachedSeriesDetail = unstable_cache(
   async (id: string) => {
-    return dbRead.series.findUnique({
+    return safeRead(client => client.series.findUnique({
       where: { id },
       include: {
         casts: true,
@@ -140,7 +147,7 @@ export const getCachedSeriesDetail = unstable_cache(
         },
         downloadLinks: true,
       },
-    });
+    }));
   },
   ['series-detail'],
   { revalidate: DETAIL_REVALIDATE, tags: ['series'] },
@@ -149,7 +156,7 @@ export const getCachedSeriesDetail = unstable_cache(
 // ─── Cached Query: Similar Series ───────────────────────────────
 export const getCachedSimilarSeries = unstable_cache(
   async (id: string, genreConditions: any[]) => {
-    return dbRead.series.findMany({
+    return safeRead(client => client.series.findMany({
       where: {
         AND: [
           { id: { not: id } },
@@ -168,7 +175,7 @@ export const getCachedSimilarSeries = unstable_cache(
       },
       orderBy: { rating: 'desc' },
       take: 30,
-    });
+    }));
   },
   ['series-similar'],
   { revalidate: SIMILAR_REVALIDATE, tags: ['series'] },
@@ -177,12 +184,12 @@ export const getCachedSimilarSeries = unstable_cache(
 // ─── Cached Query: Episode Detail ───────────────────────────────
 export const getCachedEpisodeDetail = unstable_cache(
   async (id: string) => {
-    return dbRead.episode.findUnique({
+    return safeRead(client => client.episode.findUnique({
       where: { id },
       include: {
         downloadLinks: true,
       },
-    });
+    }));
   },
   ['episodes-detail'],
   { revalidate: EPISODE_REVALIDATE, tags: ['episodes'] },
@@ -208,17 +215,17 @@ export const getCachedMovieBySlug = unstable_cache(
   async (slug: string) => {
     const title = slugToTitle(slug);
     // Try exact title match first, then partial match
-    const exact = await dbRead.movie.findFirst({
+    const exact = await safeRead(client => client.movie.findFirst({
       where: { title: { equals: title, mode: 'insensitive' } },
       include: { casts: true, downloadLinks: true },
-    });
+    }));
     if (exact) return exact;
 
     // Try partial match (slug might not match full title)
-    return dbRead.movie.findFirst({
+    return safeRead(client => client.movie.findFirst({
       where: { title: { contains: title, mode: 'insensitive' } },
       include: { casts: true, downloadLinks: true },
-    });
+    }));
   },
   ['movies-slug'],
   { revalidate: DETAIL_REVALIDATE, tags: ['movies'] },
@@ -228,7 +235,7 @@ export const getCachedSeriesBySlug = unstable_cache(
   async (slug: string) => {
     const title = slugToTitle(slug);
     // Try exact title match first, then partial match
-    const exact = await dbRead.series.findFirst({
+    const exact = await safeRead(client => client.series.findFirst({
       where: { title: { equals: title, mode: 'insensitive' } },
       include: {
         casts: true,
@@ -238,11 +245,11 @@ export const getCachedSeriesBySlug = unstable_cache(
         },
         downloadLinks: true,
       },
-    });
+    }));
     if (exact) return exact;
 
     // Try partial match
-    return dbRead.series.findFirst({
+    return safeRead(client => client.series.findFirst({
       where: { title: { contains: title, mode: 'insensitive' } },
       include: {
         casts: true,
@@ -252,7 +259,7 @@ export const getCachedSeriesBySlug = unstable_cache(
         },
         downloadLinks: true,
       },
-    });
+    }));
   },
   ['series-slug'],
   { revalidate: DETAIL_REVALIDATE, tags: ['series'] },

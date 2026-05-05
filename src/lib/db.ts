@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client'
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
   prismaReadOnly: PrismaClient | undefined
+  readOnlyFailed: boolean | undefined
 }
 
 // ============================================================
@@ -80,6 +81,56 @@ function isSSLRequired(url: string | undefined): boolean {
 }
 
 /**
+ * Validate that a database URL looks like a real, usable URL.
+ * Catches placeholder/example URLs that users might accidentally set.
+ * e.g. "ep-xxxxx-pooler", "your-hostname", "example.com"
+ */
+function isValidDatabaseUrl(url: string | undefined): { valid: boolean; reason?: string } {
+  if (!url) return { valid: false, reason: 'URL is empty' }
+
+  try {
+    const parsed = new URL(url)
+    const hostname = parsed.hostname.toLowerCase()
+
+    // Check for common placeholder patterns
+    const placeholderPatterns = [
+      /xxxxx/i,
+      /your[-_]/i,
+      /example/i,
+      /placeholder/i,
+      /replace[-_]?me/i,
+      /change[-_]?me/i,
+      /localhost/i,          // Neon doesn't use localhost
+    ]
+
+    for (const pattern of placeholderPatterns) {
+      if (pattern.test(hostname)) {
+        return { valid: false, reason: `Hostname "${hostname}" looks like a placeholder` }
+      }
+    }
+
+    // Must be a Neon hostname (ends with .neon.tech) or a known cloud DB provider
+    const validHostSuffixes = [
+      '.neon.tech',
+      '.aws.neon.tech',
+      '.azure.neon.tech',
+      '.gcp.neon.tech',
+    ]
+
+    const isNeonHost = validHostSuffixes.some(suffix => hostname.endsWith(suffix))
+
+    if (!isNeonHost) {
+      // Not a Neon host — warn but still allow (could be a different provider)
+      console.warn(`[db] Read-only URL hostname "${hostname}" is not a recognized Neon host. Proceeding with caution.`)
+    }
+
+    return { valid: true }
+  } catch {
+    return { valid: false, reason: 'URL is malformed' }
+  }
+}
+
+/**
  * Get the preferred database URL with all sanitization applied.
  * Priority: POSTGRES_PRISMA_URL > DATABASE_URL
  * This uses Neon's PgBouncer pooler URL for connection pooling.
@@ -96,13 +147,32 @@ function getDatabaseUrl(): string | undefined {
  * Priority: DATABASE_READ_ONLY_URL > POSTGRES_PRISMA_URL > DATABASE_URL
  *
  * DATABASE_READ_ONLY_URL uses a Neon role with SELECT-only permissions.
- * If not set, falls back to the regular URL (read-only enforced at app level).
+ * If not set, or if the URL looks like a placeholder, falls back to the
+ * regular URL (read-only enforced at app level).
  */
-function getReadOnlyDatabaseUrl(): string | undefined {
-  const rawUrl = process.env.DATABASE_READ_ONLY_URL || process.env.POSTGRES_PRISMA_URL || process.env.DATABASE_URL
+function getReadOnlyDatabaseUrl(): { url: string | undefined; isDedicated: boolean } {
+  const readOnlyEnvUrl = process.env.DATABASE_READ_ONLY_URL
+
+  // If DATABASE_READ_ONLY_URL is set, validate it first
+  if (readOnlyEnvUrl) {
+    const validation = isValidDatabaseUrl(readOnlyEnvUrl)
+    if (!validation.valid) {
+      console.error(`[db] ⚠️ DATABASE_READ_ONLY_URL is invalid: ${validation.reason}`)
+      console.error('[db] ⚠️ Falling back to read-write URL. Please update DATABASE_READ_ONLY_URL with a valid connection string.')
+      console.error('[db] ⚠️ The read-only user should use the SAME pooler hostname as your regular URL, just with different username/password.')
+      console.error('[db] ⚠️ Example: postgresql://readonly_user:password@ep-YOUR-ACTUAL-POOLER.aws.neon.tech/neondb?sslmode=require')
+    } else {
+      let url = sanitizeDatabaseUrl(readOnlyEnvUrl)
+      url = enforceSSL(url)
+      return { url, isDedicated: true }
+    }
+  }
+
+  // Fall back to regular URL
+  const rawUrl = process.env.POSTGRES_PRISMA_URL || process.env.DATABASE_URL
   let url = sanitizeDatabaseUrl(rawUrl)
   url = enforceSSL(url)
-  return url
+  return { url, isDedicated: false }
 }
 
 // ============================================================
@@ -145,21 +215,25 @@ function createPrismaClient(): PrismaClient {
  * Create a read-only Prisma client for public API endpoints.
  *
  * SECURITY LAYERS:
- * 1. If DATABASE_READ_ONLY_URL is set → Uses a separate Neon role
+ * 1. If DATABASE_READ_ONLY_URL is set AND valid → Uses a separate Neon role
  *    with SELECT-only permissions (most secure, requires Neon setup).
- * 2. If not set → Uses the same URL but Prisma intercept prevents writes
- *    via $transaction with access mode 'read only' (app-level protection).
+ * 2. If not set or invalid → Uses the same URL as the read-write client
+ *    (read-only enforced at app level — public routes only use dbRead).
+ *
+ * IMPORTANT: The read-only user should use the SAME pooler hostname as your
+ * regular database URL, just with a different username and password.
  *
  * To set up DATABASE_READ_ONLY_URL in Neon:
  * 1. Go to Neon Console → SQL Editor
  * 2. Run: CREATE ROLE readonly_user WITH PASSWORD 'your_password' LOGIN;
  * 3. Run: GRANT SELECT ON ALL TABLES IN SCHEMA public TO readonly_user;
  * 4. Run: ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO readonly_user;
- * 5. Create a connection string: postgresql://readonly_user:password@host/db?sslmode=require
- * 6. Set DATABASE_READ_ONLY_URL in Vercel Environment Variables
+ * 5. Copy your pooler hostname from the read-write URL (e.g., ep-round-firefly-anpw1qos-pooler)
+ * 6. Create connection string: postgresql://readonly_user:password@ep-YOUR-POOLER.aws.neon.tech/neondb?sslmode=require
+ * 7. Set DATABASE_READ_ONLY_URL in Vercel Environment Variables
  */
 function createReadOnlyPrismaClient(): PrismaClient {
-  const readOnlyUrl = getReadOnlyDatabaseUrl()
+  const { url: readOnlyUrl, isDedicated } = getReadOnlyDatabaseUrl()
 
   if (!readOnlyUrl) {
     console.error('[db] No database URL available for read-only client!')
@@ -169,7 +243,6 @@ function createReadOnlyPrismaClient(): PrismaClient {
   if (readOnlyUrl) {
     try {
       const parsed = new URL(readOnlyUrl)
-      const isDedicated = !!process.env.DATABASE_READ_ONLY_URL
       console.log(`[db] Read-only client: ${parsed.hostname} (ssl=${parsed.searchParams.get('sslmode') || 'not set'}, dedicated=${isDedicated})`)
     } catch {
       // Ignore parse errors
@@ -214,6 +287,76 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // ============================================================
+// SAFE READ WITH FALLBACK
+// ============================================================
+
+/**
+ * Track if read-only client has failed — once it fails, skip it for
+ * the rest of the process lifetime to avoid repeated timeouts.
+ */
+function hasReadOnlyFailed(): boolean {
+  return globalForPrisma.readOnlyFailed === true
+}
+
+function markReadOnlyFailed() {
+  globalForPrisma.readOnlyFailed = true
+  console.warn('[db] ⚠️ Read-only client marked as failed. All reads will use read-write client.')
+}
+
+/**
+ * Execute a read query with automatic fallback.
+ *
+ * If the read-only client (dbRead) works → use it (more secure, separate permissions).
+ * If the read-only client fails → fall back to the read-write client (db) and
+ * mark the read-only client as failed for future requests.
+ *
+ * This ensures the site ALWAYS works, even if DATABASE_READ_ONLY_URL is misconfigured.
+ */
+export async function safeRead<T>(queryFn: (client: PrismaClient) => Promise<T>): Promise<T> {
+  // If read-only already failed before, go straight to db
+  if (hasReadOnlyFailed()) {
+    return queryFn(db)
+  }
+
+  try {
+    return await queryFn(dbRead)
+  } catch (error: any) {
+    const errorMsg = error?.message || String(error)
+
+    // Check if this is a connection error (not a data/logic error)
+    const isConnectionError =
+      errorMsg.includes('connect') ||
+      errorMsg.includes('ECONNREFUSED') ||
+      errorMsg.includes('ENOTFOUND') ||
+      errorMsg.includes('timeout') ||
+      errorMsg.includes('getaddrinfo') ||
+      errorMsg.includes('fetch failed') ||
+      errorMsg.includes('P1001') ||  // Prisma: Can't reach database server
+      errorMsg.includes('P1002') ||  // Prisma: Database server timeout
+      errorMsg.includes('P1003') ||  // Prisma: Database does not exist
+      errorMsg.includes('P1008') ||  // Prisma: Operations timed out
+      errorMsg.includes('P1009') ||  // Prisma: Database already exists
+      errorMsg.includes('P1010') ||  // Prisma: Access denied
+      errorMsg.includes('P1011') ||  // Prisma: TLS/SSL error
+      errorMsg.includes('P1013') ||  // Prisma: Invalid database URL
+      errorMsg.includes('P1015') ||  // Prisma: Unsupported URL scheme
+      errorMsg.includes('P1017') ||  // Prisma: Server closed connection
+      errorMsg.includes('permission denied') ||
+      errorMsg.includes('relation')    // Table doesn't exist for this user
+
+    if (isConnectionError) {
+      console.error(`[db] ⚠️ Read-only client query failed: ${errorMsg}`)
+      console.error('[db] ⚠️ Falling back to read-write client for this and future read queries')
+      markReadOnlyFailed()
+      return queryFn(db)
+    }
+
+    // Not a connection error — re-throw (it's a data/logic error)
+    throw error
+  }
+}
+
+// ============================================================
 // SSL VERIFICATION
 // ============================================================
 
@@ -238,7 +381,13 @@ export function verifySSLConfig(): { readWrite: boolean; readOnly: boolean; warn
     warnings.push('Read-only database URL does not have sslmode=require! Connections may be unencrypted.')
   }
 
-  if (!process.env.DATABASE_READ_ONLY_URL) {
+  // Validate the read-only URL
+  if (process.env.DATABASE_READ_ONLY_URL) {
+    const validation = isValidDatabaseUrl(process.env.DATABASE_READ_ONLY_URL)
+    if (!validation.valid) {
+      warnings.push(`DATABASE_READ_ONLY_URL is invalid: ${validation.reason}. Falling back to read-write URL.`)
+    }
+  } else {
     warnings.push('DATABASE_READ_ONLY_URL not set. Using same credentials for reads and writes. Consider creating a read-only Neon role for better security.')
   }
 
@@ -260,7 +409,7 @@ export function verifySSLConfig(): { readWrite: boolean; readOnly: boolean; warn
 /**
  * Helper to check database connection
  */
-export async function checkDatabaseConnection(): Promise<{ connected: boolean; error?: string; ssl?: boolean; pooling?: boolean }> {
+export async function checkDatabaseConnection(): Promise<{ connected: boolean; error?: string; ssl?: boolean; pooling?: boolean; readOnlyWorking?: boolean }> {
   try {
     const rawUrl = process.env.POSTGRES_PRISMA_URL || process.env.DATABASE_URL
     const dbUrl = sanitizeDatabaseUrl(rawUrl)
@@ -270,10 +419,20 @@ export async function checkDatabaseConnection(): Promise<{ connected: boolean; e
 
     await db.$queryRaw`SELECT 1`
 
+    // Also check read-only client
+    let readOnlyWorking = false
+    try {
+      await dbRead.$queryRaw`SELECT 1`
+      readOnlyWorking = true
+    } catch {
+      readOnlyWorking = false
+    }
+
     return {
       connected: true,
       ssl: isSSLRequired(dbUrl),
       pooling: !!process.env.POSTGRES_PRISMA_URL,
+      readOnlyWorking,
     }
   } catch (error: any) {
     return { connected: false, error: error?.message || 'Database connection failed' }
