@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { isAuthValid } from '@/lib/auth';
+import { isAuthValid } from '@/lib/edge-auth';
 
 // ============================================================
 // MIDDLEWARE - Route-level protection for admin pages and APIs
+// Uses Edge-compatible auth check (Web Crypto API)
 // ============================================================
 
 // Admin API routes that require authentication
-// (Write operations are checked in route handlers, middleware adds extra protection layer)
 const PROTECTED_API_ROUTES = [
   '/api/admin/',
   '/api/tmdb/',
@@ -15,7 +15,7 @@ const PROTECTED_API_ROUTES = [
   '/api/setup-db',
 ];
 
-// Admin write API routes that need extra rate limit protection
+// Admin write API routes that need extra protection
 const ADMIN_WRITE_ROUTES = [
   '/api/movies/',  // PUT, DELETE methods need auth (checked in route handler)
   '/api/series/',  // PUT, DELETE methods need auth (checked in route handler)
@@ -29,7 +29,7 @@ const ADMIN_PAGES = [
   '/admin/tmdb',
 ];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // ---- Security Headers for ALL responses ----
@@ -47,7 +47,7 @@ export function middleware(request: NextRequest) {
   const isAdminPage = ADMIN_PAGES.some(path => pathname.startsWith(path));
   if (isAdminPage) {
     // Server-side auth check using cookie or Authorization header
-    const isAuthenticated = isAuthValid(request);
+    const isAuthenticated = await isAuthValid(request);
 
     if (!isAuthenticated) {
       // Redirect to login page instead of serving the page
@@ -65,8 +65,8 @@ export function middleware(request: NextRequest) {
   // ---- Protect admin API routes ----
   const isProtectedApi = PROTECTED_API_ROUTES.some(path => pathname.startsWith(path));
   if (isProtectedApi) {
-    // Allow login route without auth
-    if (pathname === '/api/admin/login') {
+    // Allow login and logout routes without auth
+    if (pathname === '/api/admin/login' || pathname === '/api/admin/logout') {
       response.headers.set('Cache-Control', 'no-store');
       return response;
     }
@@ -90,7 +90,7 @@ export function middleware(request: NextRequest) {
     }
 
     // Check authentication for all other protected API routes
-    const isAuthenticated = isAuthValid(request);
+    const isAuthenticated = await isAuthValid(request);
     if (!isAuthenticated) {
       return NextResponse.json(
         { error: 'Authentication required', code: 'AUTH_MISSING' },
@@ -102,14 +102,13 @@ export function middleware(request: NextRequest) {
     return response;
   }
 
-  // ---- Admin write API routes - middleware level rate limiting ----
+  // ---- Admin write API routes - middleware level auth ----
   const isAdminWriteRoute = ADMIN_WRITE_ROUTES.some(path => pathname.startsWith(path));
   if (isAdminWriteRoute) {
     const method = request.method;
     // Only protect write operations (PUT, DELETE, POST)
     if (method === 'PUT' || method === 'DELETE' || method === 'POST') {
-      // Auth check at middleware level (double protection with route handler)
-      const isAuthenticated = isAuthValid(request);
+      const isAuthenticated = await isAuthValid(request);
       if (!isAuthenticated) {
         return NextResponse.json(
           { error: 'Authentication required', code: 'AUTH_MISSING' },
