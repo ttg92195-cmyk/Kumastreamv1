@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { isAuthValid } from '@/lib/edge-auth';
+import { isEdgeRateLimited, getEdgeClientIp, EDGE_RATE_LIMITS } from '@/lib/edge-rate-limit';
 
 // ============================================================
-// MIDDLEWARE - Route-level protection for admin pages and APIs
-// Uses Edge-compatible auth check (Web Crypto API)
+// MIDDLEWARE - Route-level protection, rate limiting, and
+// DDoS/abuse protection for all routes.
+// Uses Edge-compatible auth check (Web Crypto API) and rate limiter.
 // ============================================================
 
 // Admin API routes that require authentication
@@ -29,11 +31,102 @@ const ADMIN_PAGES = [
   '/admin/tmdb',
 ];
 
+// Search API routes (expensive, need stricter rate limiting)
+const SEARCH_API_ROUTES = [
+  '/api/movies?',   // When used with search param
+  '/api/series?',   // When used with search param
+  '/api/tmdb/search',
+];
+
+// Known bad bots / scrapers to block
+const BLOCKED_USER_AGENTS = [
+  'semrushbot',
+  'ahrefsbot',
+  'mj12bot',
+  'dotbot',
+  'rogerbot',
+  'exabot',
+  'megaindex',
+  'majestic12',
+  'siteexplorer',
+  'seomoz',
+  'blekkobot',
+  'warobot',
+  'yandexbot',  // Optional: block if not targeting Russian audience
+  'baiduspider', // Optional: block if not targeting Chinese audience
+  'sqlmap',      // SQL injection tool
+  'nikto',       // Vulnerability scanner
+  'nmap',        // Port scanner
+  'masscan',     // Mass port scanner
+  'dirbuster',   // Directory brute-force
+  'gobuster',    // Directory brute-force
+  'wfuzz',       // Web fuzzer
+  'burpsuite',   // Web security testing
+  'zap',         // OWASP ZAP scanner
+];
+
+// Maximum request body size (1MB for API routes)
+const MAX_REQUEST_SIZE = 1024 * 1024; // 1MB
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const clientIp = getEdgeClientIp(request);
 
-  // ---- Security Headers for ALL responses ----
+  // ============================================================
+  // 1. GLOBAL RATE LIMITING - Per-IP, applies to ALL requests
+  // This is the first line of defense against DDoS/abuse
+  // ============================================================
+  if (isEdgeRateLimited(clientIp, EDGE_RATE_LIMITS.GLOBAL)) {
+    return new NextResponse(
+      JSON.stringify({ error: 'Too many requests. Please slow down.', code: 'RATE_LIMITED' }),
+      {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          'Retry-After': '60',
+        },
+      }
+    );
+  }
+
+  // ============================================================
+  // 2. BOT DETECTION - Block known malicious bots/scanners
+  // ============================================================
+  const userAgent = (request.headers.get('user-agent') || '').toLowerCase();
+
+  // Block known bad bots
+  const isBlockedBot = BLOCKED_USER_AGENTS.some(bot => userAgent.includes(bot));
+  if (isBlockedBot) {
+    return new NextResponse(null, { status: 403 });
+  }
+
+  // Block requests with no User-Agent (often bots)
+  if (!userAgent || userAgent.length < 5) {
+    // Allow health checks from monitoring services (they might have minimal UA)
+    if (pathname !== '/api/health') {
+      return new NextResponse(null, { status: 403 });
+    }
+  }
+
+  // ============================================================
+  // 3. REQUEST SIZE LIMITING - Block oversized requests
+  // ============================================================
+  if (pathname.startsWith('/api/') && request.method !== 'GET' && request.method !== 'HEAD') {
+    const contentLength = request.headers.get('content-length');
+    if (contentLength && parseInt(contentLength) > MAX_REQUEST_SIZE) {
+      return NextResponse.json(
+        { error: 'Request body too large. Maximum size is 1MB.', code: 'PAYLOAD_TOO_LARGE' },
+        { status: 413 }
+      );
+    }
+  }
+
+  // ============================================================
+  // 4. SECURITY HEADERS for ALL responses
+  // ============================================================
   const response = NextResponse.next();
+
+  // Core security headers
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-XSS-Protection', '1; mode=block');
@@ -43,14 +136,44 @@ export async function middleware(request: NextRequest) {
     'camera=(), microphone=(), geolocation=()'
   );
 
-  // ---- Protect admin pages with server-side auth check ----
+  // Strict Transport Security (HSTS) - enforce HTTPS
+  // max-age=1 year, include subdomains, preload
+  response.headers.set(
+    'Strict-Transport-Security',
+    'max-age=31536000; includeSubDomains; preload'
+  );
+
+  // Content Security Policy (CSP) - prevent XSS and injection
+  response.headers.set(
+    'Content-Security-Policy',
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // unsafe-inline/eval needed for Next.js
+      "style-src 'self' 'unsafe-inline'",                  // unsafe-inline needed for Tailwind
+      "img-src 'self' data: https://image.tmdb.org https://via.placeholder.com blob:",
+      "font-src 'self' data:",
+      "connect-src 'self' https://api.themoviedb.org https://*.vercel.app",
+      "media-src 'self' blob:",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "frame-ancestors 'none'",
+    ].join('; ')
+  );
+
+  // Cross-Origin policies
+  response.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+  response.headers.set('Cross-Origin-Resource-Policy', 'same-origin');
+  response.headers.set('Cross-Origin-Embedder-Policy', 'unsafe-none'); // Allow TMDB images
+
+  // ============================================================
+  // 5. PROTECT ADMIN PAGES with server-side auth check
+  // ============================================================
   const isAdminPage = ADMIN_PAGES.some(path => pathname.startsWith(path));
   if (isAdminPage) {
-    // Server-side auth check using cookie or Authorization header
     const isAuthenticated = await isAuthValid(request);
 
     if (!isAuthenticated) {
-      // Redirect to login page instead of serving the page
       const loginUrl = new URL('/admin/login', request.url);
       loginUrl.searchParams.set('from', pathname);
       return NextResponse.redirect(loginUrl);
@@ -62,11 +185,32 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // ---- Protect admin API routes ----
+  // ============================================================
+  // 6. PROTECT ADMIN API ROUTES with auth check
+  // ============================================================
   const isProtectedApi = PROTECTED_API_ROUTES.some(path => pathname.startsWith(path));
   if (isProtectedApi) {
     // Allow login and logout routes without auth
     if (pathname === '/api/admin/login' || pathname === '/api/admin/logout') {
+      // Rate limit login attempts specifically
+      if (pathname === '/api/admin/login') {
+        if (isEdgeRateLimited(clientIp, EDGE_RATE_LIMITS.LOGIN)) {
+          return new NextResponse(
+            JSON.stringify({
+              error: 'Too many login attempts. Please try again later.',
+              code: 'RATE_LIMITED',
+              retryAfter: 900, // 15 minutes
+            }),
+            {
+              status: 429,
+              headers: {
+                'Content-Type': 'application/json',
+                'Retry-After': '900',
+              },
+            }
+          );
+        }
+      }
       response.headers.set('Cache-Control', 'no-store');
       return response;
     }
@@ -102,7 +246,9 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // ---- Admin write API routes - middleware level auth ----
+  // ============================================================
+  // 7. ADMIN WRITE API ROUTES - middleware level auth
+  // ============================================================
   const isAdminWriteRoute = ADMIN_WRITE_ROUTES.some(path => pathname.startsWith(path));
   if (isAdminWriteRoute) {
     const method = request.method;
@@ -120,10 +266,45 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // ---- Public API routes: add rate limiting headers ----
+  // ============================================================
+  // 8. PUBLIC API RATE LIMITING
+  // Apply stricter rate limits to expensive public API endpoints
+  // ============================================================
   const isPublicApi = pathname.startsWith('/api/');
   if (isPublicApi) {
-    response.headers.set('X-RateLimit-Policy', '60;w=60'); // 60 requests per 60 seconds
+    // Determine rate limit based on route
+    let rateLimitConfig = EDGE_RATE_LIMITS.PUBLIC_API;
+
+    // Stricter rate limit for search endpoints
+    const isSearchApi = pathname === '/api/tmdb/search' ||
+      (pathname === '/api/movies' && request.nextUrl.searchParams.has('search')) ||
+      (pathname === '/api/series' && request.nextUrl.searchParams.has('search'));
+
+    if (isSearchApi) {
+      rateLimitConfig = EDGE_RATE_LIMITS.SEARCH_API;
+    }
+
+    if (isEdgeRateLimited(clientIp, rateLimitConfig)) {
+      const retryAfter = Math.ceil(rateLimitConfig.windowMs / 1000);
+      return new NextResponse(
+        JSON.stringify({
+          error: 'Too many requests. Please try again later.',
+          code: 'RATE_LIMITED',
+          retryAfter,
+        }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            'Retry-After': String(retryAfter),
+            'X-RateLimit-Remaining': '0',
+          },
+        }
+      );
+    }
+
+    // Add rate limit headers to response
+    response.headers.set('X-RateLimit-Policy', `${rateLimitConfig.maxRequests};w=${Math.ceil(rateLimitConfig.windowMs / 1000)}`);
   }
 
   return response;
@@ -136,8 +317,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization)
      * - favicon.ico (favicon)
-     * - public folder files
+     * - public folder files (images, etc.)
      */
-    '/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|eot)$).*)',
   ],
 };
