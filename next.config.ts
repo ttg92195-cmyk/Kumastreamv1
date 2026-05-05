@@ -19,11 +19,13 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Provide fallback DATABASE_URL during build if not set
+  // Build-time env fallbacks for database URLs
+  // SECURITY: No hardcoded connection strings - if env vars are missing, use empty strings
+  // Prisma will throw a clear error at runtime if DATABASE_URL is not configured
   env: {
-    DATABASE_URL: process.env.POSTGRES_PRISMA_URL || process.env.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder?schema=public',
-    POSTGRES_PRISMA_URL: process.env.POSTGRES_PRISMA_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder?schema=public',
-    POSTGRES_URL_NON_POOLING: process.env.POSTGRES_URL_NON_POOLING || 'postgresql://placeholder:placeholder@localhost:5432/placeholder?schema=public',
+    DATABASE_URL: process.env.POSTGRES_PRISMA_URL || process.env.DATABASE_URL || '',
+    POSTGRES_PRISMA_URL: process.env.POSTGRES_PRISMA_URL || '',
+    POSTGRES_URL_NON_POOLING: process.env.POSTGRES_URL_NON_POOLING || '',
   },
 };
 

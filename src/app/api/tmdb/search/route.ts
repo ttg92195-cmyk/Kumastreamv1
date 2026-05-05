@@ -154,7 +154,7 @@ export async function GET(request: NextRequest) {
           url += `&with_original_language=${language}`;
         }
 
-        console.log(`Searching TMDB page ${page}:`, url);
+        console.log(`Searching TMDB page ${page}:`, url.replace(/api_key=[^&]+/, 'api_key=***'));
 
         const response = await fetch(url);
         if (!response.ok) {

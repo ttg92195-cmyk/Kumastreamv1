@@ -26,16 +26,16 @@ function getAdminCredentials() {
         'Go to Vercel Dashboard > Settings > Environment Variables to add them.'
       );
     }
-    // In development, use a derived default but log a warning
+    // In development, warn loudly but use a fixed dev-only credential
     console.warn(
       '⚠️ SECURITY WARNING: ADMIN_USERNAME or ADMIN_PASSWORD not set. ' +
-      'Using derived defaults for development only. Set these in .env.local for security.'
+      'Using dev-only credentials. Set these in .env.local for security.\n' +
+      '  ADMIN_USERNAME=dev_admin\n' +
+      '  ADMIN_PASSWORD=dev_password'
     );
-    const derivedKey = process.env.DATABASE_URL || process.env.POSTGRES_PRISMA_URL || 'fallback';
-    const hash = crypto.createHash('sha256').update(derivedKey).digest('hex').substring(0, 12);
     return {
-      username: `admin_${hash.substring(0, 6)}`,
-      password: hash,
+      username: 'dev_admin',
+      password: 'dev_password',
     };
   }
 
@@ -56,13 +56,12 @@ function getAuthSecret(): string {
     );
   }
 
-  // Development fallback: derive from admin credentials
+  // Development fallback: use a fixed dev secret (NEVER use in production)
   console.warn(
-    '⚠️ AUTH_SECRET not set. Using derived key for development only. ' +
+    '⚠️ AUTH_SECRET not set. Using dev-only secret. ' +
     'Set AUTH_SECRET in .env.local for persistent tokens.'
   );
-  const { username, password } = getAdminCredentials();
-  return crypto.createHash('sha256').update(`${username}:${password}:auth-secret`).digest('hex');
+  return 'dev-only-auth-secret-do-not-use-in-production';
 }
 
 // ============================================================
