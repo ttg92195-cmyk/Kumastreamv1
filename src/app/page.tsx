@@ -115,50 +115,7 @@ export default function HomePage() {
       {/* Content */}
       <div className="p-4 space-y-6">
         <h1 className="sr-only">CINE STREAM - Home</h1>
-        {loading ? (
-          <div className="space-y-6">
-            {/* Movies Section Skeleton */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-gray-800 rounded animate-pulse" />
-                  <div className="h-5 w-20 bg-gray-800 rounded animate-pulse" />
-                  <div className="h-4 w-8 bg-gray-800 rounded animate-pulse" />
-                </div>
-                <div className="h-4 w-16 bg-gray-800 rounded animate-pulse" />
-              </div>
-              <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-2">
-                {[...Array(10)].map((_, i) => (
-                  <div key={i}>
-                    <div className="aspect-[2/3] bg-gray-800 rounded-md animate-pulse" />
-                    <div className="mt-1.5 h-3 bg-gray-800 rounded animate-pulse w-4/5" />
-                    <div className="mt-1 h-2.5 bg-gray-800 rounded animate-pulse w-1/3" />
-                  </div>
-                ))}
-              </div>
-            </div>
-            {/* Series Section Skeleton */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-gray-800 rounded animate-pulse" />
-                  <div className="h-5 w-20 bg-gray-800 rounded animate-pulse" />
-                  <div className="h-4 w-8 bg-gray-800 rounded animate-pulse" />
-                </div>
-                <div className="h-4 w-16 bg-gray-800 rounded animate-pulse" />
-              </div>
-              <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-2">
-                {[...Array(10)].map((_, i) => (
-                  <div key={i}>
-                    <div className="aspect-[2/3] bg-gray-800 rounded-md animate-pulse" />
-                    <div className="mt-1.5 h-3 bg-gray-800 rounded animate-pulse w-4/5" />
-                    <div className="mt-1 h-2.5 bg-gray-800 rounded animate-pulse w-1/3" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        ) : (
+        {loading ? null : (
           <>
             {/* Movies Section */}
             {movies.length > 0 && (

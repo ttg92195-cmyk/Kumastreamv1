@@ -7,8 +7,8 @@ export function GenresHeaderFallback() {
   return (
     <div className="sticky top-0 z-20 bg-[#0f0f0f] border-b border-gray-800">
       <div className="flex items-center gap-4 p-4">
-        <div className="w-6 h-6 bg-gray-800 rounded animate-pulse" />
-        <div className="h-5 w-24 bg-gray-800 rounded animate-pulse" />
+        <div className="w-6 h-6" />
+        <div className="h-5 w-24" />
       </div>
     </div>
   );

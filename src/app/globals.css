@@ -239,23 +239,6 @@ input:-moz-autofill-preview {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Skeleton shimmer */
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-.animate-shimmer {
-  background: linear-gradient(
-    90deg,
-    var(--card) 25%,
-    var(--card-hover) 50%,
-    var(--card) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.2s infinite;
-}
-
 /* Scale on hover */
 @keyframes scaleIn {
   from {

@@ -403,17 +403,7 @@ function CollectionContent() {
 
       {/* Content */}
       <div className="p-4">
-        {loading ? (
-          <div className="grid grid-cols-3 gap-3">
-            {[...Array(30)].map((_, i) => (
-              <div key={i}>
-                <div className="aspect-[2/3] bg-gray-800 rounded-md animate-pulse" />
-                <div className="mt-1.5 h-3 bg-gray-800 rounded animate-pulse w-4/5" />
-                <div className="mt-1 h-2.5 bg-gray-800 rounded animate-pulse w-1/3" />
-              </div>
-            ))}
-          </div>
-        ) : totalItems === 0 ? (
+        {loading ? null : totalItems === 0 ? (
           <div className="text-center py-20">
             <Search className="w-16 h-16 mx-auto mb-4 text-gray-600" />
             <p className="text-white text-lg font-medium mb-2">No results found</p>
@@ -457,28 +447,7 @@ function CollectionContent() {
 
 export default function CollectionPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-[#0f0f0f] pb-20">
-        <div className="sticky top-0 z-20 bg-[#0f0f0f] border-b border-gray-800 p-4">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-gray-800 rounded-full animate-pulse" />
-            <div className="flex-1 space-y-2">
-              <div className="h-5 w-32 bg-gray-800 rounded animate-pulse" />
-              <div className="h-4 w-24 bg-gray-800 rounded animate-pulse" />
-            </div>
-          </div>
-        </div>
-        <div className="p-4 grid grid-cols-3 gap-3">
-          {[...Array(30)].map((_, i) => (
-            <div key={i}>
-              <div className="aspect-[2/3] bg-gray-800 rounded-md animate-pulse" />
-              <div className="mt-1.5 h-3 bg-gray-800 rounded animate-pulse w-4/5" />
-              <div className="mt-1 h-2.5 bg-gray-800 rounded animate-pulse w-1/3" />
-            </div>
-          ))}
-        </div>
-      </div>
-    }>
+    <Suspense fallback={null}>
       <CollectionContent />
     </Suspense>
   );

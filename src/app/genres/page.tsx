@@ -356,16 +356,7 @@ function GenresContent() {
   };
 
   if (loading) {
-    return (
-      <div className="p-4 space-y-6">
-        <div className="h-6 w-16 bg-gray-800 rounded animate-pulse" />
-        <div className="grid grid-cols-4 gap-2">
-          {[...Array(16)].map((_, i) => (
-            <div key={i} className="h-10 bg-gray-800 rounded animate-pulse" />
-          ))}
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -388,17 +379,7 @@ function GenresContent() {
       {/* Results Section */}
       {hasRealFilter && (
         <div className="space-y-6">
-          {resultsLoading ? (
-            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
-              {[...Array(30)].map((_, i) => (
-                <div key={i}>
-                  <div className="aspect-[2/3] bg-gray-800 rounded-md animate-pulse" />
-                  <div className="mt-1.5 h-3 bg-gray-800 rounded animate-pulse w-4/5" />
-                  <div className="mt-1 h-2.5 bg-gray-800 rounded animate-pulse w-1/3" />
-                </div>
-              ))}
-            </div>
-          ) : (
+          {resultsLoading ? null : (
             <>
               {(type === 'all' || type === 'movie') && movies.length > 0 && (
                 <div className="space-y-3">
@@ -719,17 +700,7 @@ function GenresContent() {
   );
 }
 
-function GenresGridSkeleton() {
-  return (
-    <div className="p-4 space-y-6">
-      <div className="grid grid-cols-3 gap-2">
-        {[...Array(12)].map((_, i) => (
-          <div key={i} className="h-10 bg-gray-800 rounded animate-pulse" />
-        ))}
-      </div>
-    </div>
-  );
-}
+
 
 export default function GenresPage() {
   return (
@@ -737,7 +708,7 @@ export default function GenresPage() {
       <Suspense fallback={<GenresHeaderFallback />}>
         <GenresHeader />
       </Suspense>
-      <Suspense fallback={<GenresGridSkeleton />}>
+      <Suspense fallback={null}>
         <GenresContent />
       </Suspense>
     </div>
