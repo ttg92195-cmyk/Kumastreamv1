@@ -3,6 +3,7 @@ export const revalidate = 600;
 
 import { NextResponse, NextRequest } from 'next/server';
 import { validateAdminAuth, isValidDownloadUrl, sanitizeError } from '@/lib/auth';
+import { checkRateLimit, getClientIp, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit';
 import { getCachedMovieDetail, getCachedSimilarMovies, getCachedMovieBySlug, isCuid, invalidateMovieCache } from '@/lib/cache';
 
 // Placeholder image for missing posters
@@ -140,6 +141,12 @@ export async function DELETE(
     const authResult = validateAdminAuth(request as NextRequest);
     if (!authResult.authorized) return authResult.response!;
 
+    // Rate limiting - admin write: 60 per minute per user
+    const rateLimitResult = checkRateLimit(authResult.username || getClientIp(request), RATE_LIMITS.ADMIN_WRITE);
+    if (!rateLimitResult.allowed) {
+      return rateLimitResponse(rateLimitResult);
+    }
+
     if (!id) {
       return NextResponse.json({ error: 'Movie ID is required' }, { status: 400 });
     }
@@ -185,6 +192,12 @@ export async function PUT(
 
     const authResult = validateAdminAuth(request as NextRequest);
     if (!authResult.authorized) return authResult.response!;
+
+    // Rate limiting - admin write: 60 per minute per user
+    const rateLimitResult = checkRateLimit(authResult.username || getClientIp(request), RATE_LIMITS.ADMIN_WRITE);
+    if (!rateLimitResult.allowed) {
+      return rateLimitResponse(rateLimitResult);
+    }
 
     const body = await request.json();
 

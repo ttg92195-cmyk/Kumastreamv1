@@ -9,21 +9,28 @@ import crypto from 'crypto';
 const TOKEN_EXPIRY_HOURS = 24; // Token expires after 24 hours
 const TOKEN_VERSION = 1; // Increment to invalidate all existing tokens
 
-// Get admin credentials - NO default fallbacks for security
-// Admin MUST set ADMIN_USERNAME and ADMIN_PASSWORD env vars
+// Cookie name for storing auth token
+const AUTH_COOKIE_NAME = 'admin_token';
+
+// Get admin credentials from environment variables
+// SECURITY: No default fallbacks - admin MUST set ADMIN_USERNAME and ADMIN_PASSWORD
 function getAdminCredentials() {
   const username = process.env.ADMIN_USERNAME;
   const password = process.env.ADMIN_PASSWORD;
 
-  // If no env vars set, use a derived default (but log a warning)
-  // This prevents the site from breaking on first deploy while still
-  // encouraging users to set proper env vars
   if (!username || !password) {
+    // In production, throw error if credentials not set
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'SECURITY ERROR: ADMIN_USERNAME and ADMIN_PASSWORD must be set in environment variables. ' +
+        'Go to Vercel Dashboard > Settings > Environment Variables to add them.'
+      );
+    }
+    // In development, use a derived default but log a warning
     console.warn(
-      '⚠️ SECURITY WARNING: ADMIN_USERNAME or ADMIN_PASSWORD not set in environment variables. ' +
-      'Using derived defaults. Please set these in Vercel environment variables for security.'
+      '⚠️ SECURITY WARNING: ADMIN_USERNAME or ADMIN_PASSWORD not set. ' +
+      'Using derived defaults for development only. Set these in .env.local for security.'
     );
-    // Use a derived value that's not guessable from source code alone
     const derivedKey = process.env.DATABASE_URL || process.env.POSTGRES_PRISMA_URL || 'fallback';
     const hash = crypto.createHash('sha256').update(derivedKey).digest('hex').substring(0, 12);
     return {
@@ -36,12 +43,24 @@ function getAdminCredentials() {
 }
 
 // Get or generate a token signing secret
-// In production, set AUTH_SECRET env var for persistent tokens across deploys
+// SECURITY: AUTH_SECRET must be set in production for persistent tokens across deploys
 function getAuthSecret(): string {
   const secret = process.env.AUTH_SECRET;
   if (secret) return secret;
 
-  // Fallback: derive from admin credentials (changes when admin creds change)
+  // In production, throw error if AUTH_SECRET not set
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'SECURITY ERROR: AUTH_SECRET must be set in environment variables. ' +
+      'Generate one with: openssl rand -base64 32'
+    );
+  }
+
+  // Development fallback: derive from admin credentials
+  console.warn(
+    '⚠️ AUTH_SECRET not set. Using derived key for development only. ' +
+    'Set AUTH_SECRET in .env.local for persistent tokens.'
+  );
   const { username, password } = getAdminCredentials();
   return crypto.createHash('sha256').update(`${username}:${password}:auth-secret`).digest('hex');
 }
@@ -72,14 +91,34 @@ export function generateAuthToken(username: string, _password: string): string {
 }
 
 /**
- * Validate admin session from request headers.
- * Checks for Bearer token in Authorization header.
+ * Extract auth token from request - checks both Authorization header and cookie.
+ * This allows API calls from both frontend (cookie) and programmatic (header) sources.
+ */
+function extractAuthToken(request: NextRequest): string | null {
+  // 1. Check Authorization header first (for API calls from admin panel)
+  const authHeader = request.headers.get('Authorization');
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    return authHeader.substring(7);
+  }
+
+  // 2. Check cookie (for browser-based requests, middleware)
+  const cookieToken = request.cookies.get(AUTH_COOKIE_NAME)?.value;
+  if (cookieToken) {
+    return cookieToken;
+  }
+
+  return null;
+}
+
+/**
+ * Validate admin session from request headers or cookies.
+ * Checks for Bearer token in Authorization header OR admin_token cookie.
  * Uses HMAC verification - token cannot be forged without the secret.
  */
 export function validateAdminAuth(request: NextRequest): { authorized: boolean; response?: NextResponse; username?: string } {
-  const authHeader = request.headers.get('Authorization');
+  const token = extractAuthToken(request);
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!token) {
     return {
       authorized: false,
       response: NextResponse.json(
@@ -88,8 +127,6 @@ export function validateAdminAuth(request: NextRequest): { authorized: boolean; 
       ),
     };
   }
-
-  const token = authHeader.substring(7);
 
   try {
     // Decode token
@@ -178,8 +215,55 @@ export function validateAdminAuth(request: NextRequest): { authorized: boolean; 
 }
 
 /**
+ * Lightweight auth check for middleware - doesn't throw, just returns boolean.
+ * Used to protect admin pages at the middleware level before rendering.
+ */
+export function isAuthValid(request: NextRequest): boolean {
+  try {
+    const token = extractAuthToken(request);
+    if (!token) return false;
+
+    const decoded = Buffer.from(token, 'base64').toString('utf-8');
+    const parts = decoded.split(':');
+    if (parts.length !== 4) return false;
+
+    const [versionStr, timestampStr, username, providedSignature] = parts;
+    const version = parseInt(versionStr, 10);
+    const timestamp = parseInt(timestampStr, 10);
+
+    // Check version
+    if (version !== TOKEN_VERSION) return false;
+
+    // Check expiry
+    const tokenAge = Date.now() - timestamp;
+    const maxAge = TOKEN_EXPIRY_HOURS * 60 * 60 * 1000;
+    if (tokenAge > maxAge) return false;
+
+    // Verify HMAC signature
+    const secret = getAuthSecret();
+    const payload = `${version}:${timestamp}:${username}`;
+    const expectedSignature = crypto
+      .createHmac('sha256', secret)
+      .update(payload)
+      .digest('hex');
+
+    if (!crypto.timingSafeEqual(Buffer.from(providedSignature), Buffer.from(expectedSignature))) {
+      return false;
+    }
+
+    // Verify username
+    const { username: adminUsername } = getAdminCredentials();
+    if (username !== adminUsername) return false;
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Validate admin credentials for login.
- * Returns { valid: boolean, username?: string } 
+ * Returns { valid: boolean, username?: string }
  */
 export function validateCredentials(username: string, password: string): { valid: boolean; username?: string } {
   const creds = getAdminCredentials();
@@ -187,6 +271,31 @@ export function validateCredentials(username: string, password: string): { valid
     return { valid: true, username: creds.username };
   }
   return { valid: false };
+}
+
+// ============================================================
+// COOKIE HELPERS
+// ============================================================
+
+/**
+ * Get cookie configuration for admin token.
+ */
+export function getAuthCookieConfig() {
+  return {
+    name: AUTH_COOKIE_NAME,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax' as const,
+    path: '/',
+    maxAge: TOKEN_EXPIRY_HOURS * 60 * 60, // 24 hours in seconds
+  };
+}
+
+/**
+ * Get the cookie name constant (for use in login route).
+ */
+export function getAuthCookieName(): string {
+  return AUTH_COOKIE_NAME;
 }
 
 // ============================================================

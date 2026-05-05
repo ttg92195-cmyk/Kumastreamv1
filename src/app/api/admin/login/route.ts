@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
-import { generateAuthToken, validateCredentials } from '@/lib/auth';
+import { generateAuthToken, validateCredentials, getAuthCookieConfig, getAuthCookieName } from '@/lib/auth';
 import { checkRateLimit, getClientIp, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit';
 
 export async function POST(request: Request) {
@@ -30,7 +30,9 @@ export async function POST(request: Request) {
       // Generate a secure HMAC-based token
       const token = generateAuthToken(username, password);
 
-      return NextResponse.json({
+      // Set auth cookie for server-side middleware verification
+      const cookieConfig = getAuthCookieConfig();
+      const response = NextResponse.json({
         user: {
           id: 'admin-1',
           username: result.username,
@@ -38,6 +40,19 @@ export async function POST(request: Request) {
         },
         token,
       });
+
+      // Set httpOnly cookie for middleware auth check
+      response.cookies.set({
+        name: getAuthCookieName(),
+        value: token,
+        httpOnly: cookieConfig.httpOnly,
+        secure: cookieConfig.secure,
+        sameSite: cookieConfig.sameSite,
+        path: cookieConfig.path,
+        maxAge: cookieConfig.maxAge,
+      });
+
+      return response;
     }
 
     return NextResponse.json(

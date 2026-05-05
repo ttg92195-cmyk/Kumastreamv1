@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse, NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { validateAdminAuth, sanitizeError } from '@/lib/auth';
+import { checkRateLimit, getClientIp, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit';
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
@@ -89,6 +90,12 @@ export async function POST(request: Request) {
     // Auth check
     const authResult = validateAdminAuth(request as NextRequest);
     if (!authResult.authorized) return authResult.response!;
+
+    // Rate limiting - admin write: 60 per minute per user
+    const rateLimitResult = checkRateLimit(authResult.username || getClientIp(request), RATE_LIMITS.ADMIN_WRITE);
+    if (!rateLimitResult.allowed) {
+      return rateLimitResponse(rateLimitResult);
+    }
 
     console.log('=== TMDB Import Started (Optimized) ===');
 

@@ -289,46 +289,41 @@ export async function GET(request: Request) {
       'Add server column to DownloadLink'
     );
 
-    // Create admin user using parameterized query (fixes SQL injection)
-    // Use the same secure credential logic as auth.ts
-    const { username: adminUsername, password: adminPassword } = (() => {
-      const u = process.env.ADMIN_USERNAME;
-      const p = process.env.ADMIN_PASSWORD;
-      if (!u || !p) {
-        const crypto = require('crypto');
-        const derivedKey = process.env.DATABASE_URL || process.env.POSTGRES_PRISMA_URL || 'fallback';
-        const hash = crypto.createHash('sha256').update(derivedKey).digest('hex').substring(0, 12);
-        return { username: `admin_${hash.substring(0, 6)}`, password: hash };
+    // Create admin user using environment variables (no dangerous fallbacks)
+    const adminUsername = process.env.ADMIN_USERNAME;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    if (adminUsername && adminPassword) {
+      try {
+        const hashedPassword = await bcrypt.hash(adminPassword, 10);
+
+        // Check if user exists first using tagged template (safe from injection)
+        const existingUsers = await db.$queryRaw`SELECT * FROM "User" WHERE username = ${adminUsername}`;
+
+        if (!Array.isArray(existingUsers) || existingUsers.length === 0) {
+          // Use Prisma client instead of raw SQL (safe from injection)
+          await db.user.create({
+            data: {
+              id: 'admin-001',
+              username: adminUsername,
+              password: hashedPassword,
+              isAdmin: true,
+              updatedAt: new Date(),
+            }
+          });
+          results.push('Admin user created');
+          console.log('[setup] Admin user created');
+        } else {
+          results.push('Admin user already exists');
+          console.log('[setup] Admin user already exists');
+        }
+      } catch (userError: unknown) {
+        const msg = userError instanceof Error ? userError.message : String(userError);
+        results.push(`Admin user: ${msg}`);
       }
-      return { username: u, password: p };
-    })();
-
-    try {
-      const hashedPassword = await bcrypt.hash(adminPassword, 10);
-
-      // Check if user exists first using tagged template (safe from injection)
-      const existingUsers = await db.$queryRaw`SELECT * FROM "User" WHERE username = ${adminUsername}`;
-
-      if (!Array.isArray(existingUsers) || existingUsers.length === 0) {
-        // Use Prisma client instead of raw SQL (safe from injection)
-        await db.user.create({
-          data: {
-            id: 'admin-001',
-            username: adminUsername,
-            password: hashedPassword,
-            isAdmin: true,
-            updatedAt: new Date(),
-          }
-        });
-        results.push('Admin user created');
-        console.log('[setup] Admin user created');
-      } else {
-        results.push('Admin user already exists');
-        console.log('[setup] Admin user already exists');
-      }
-    } catch (userError: unknown) {
-      const msg = userError instanceof Error ? userError.message : String(userError);
-      results.push(`Admin user: ${msg}`);
+    } else {
+      results.push('Admin user: skipped (ADMIN_USERNAME/ADMIN_PASSWORD not set)');
+      console.warn('[setup] Admin user not created - set ADMIN_USERNAME and ADMIN_PASSWORD env vars');
     }
 
     console.log('[setup] Database Setup Complete');
