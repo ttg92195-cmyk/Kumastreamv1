@@ -110,13 +110,13 @@ export default function EditMoviePage() {
     }
   }, [_hasHydrated, admin, router]);
 
-  // Fetch movie data
+  // Fetch movie data — always bypass cache to get latest data for editing
   const fetchMovie = useCallback(async () => {
     if (!movieId) return;
 
     setLoading(true);
     try {
-      const res = await fetch(`/api/movies/${movieId}`);
+      const res = await fetch(`/api/movies/${movieId}?_nocache=1`, { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         const m = data.movie;
@@ -238,6 +238,45 @@ export default function EditMoviePage() {
       });
 
       if (res.ok) {
+        // Update local state from the server response so the form
+        // always reflects what was actually saved in the database.
+        try {
+          const saveData = await res.json();
+          if (saveData.movie) {
+            const m = saveData.movie;
+            setMovie(m);
+            setDownloadLinks(m.downloadLinks || []);
+
+            const qualityStr = m.quality || '';
+            const qTags = qualityStr.split('/').map((q: string) => q.trim()).filter(Boolean);
+            setQualityTags(qTags);
+
+            const tagsStr = m.tags || '';
+            const mTags = tagsStr.split(',').map((t: string) => t.trim()).filter(Boolean);
+            setSelectedTags(mTags);
+
+            setFormData({
+              title: m.title || '',
+              year: String(m.year || ''),
+              rating: String(m.rating || ''),
+              duration: String(m.duration || ''),
+              poster: m.poster || '',
+              backdrop: m.backdrop || '',
+              description: m.description || '',
+              review: m.review || '',
+              genres: m.genres || '',
+              director: m.director || '',
+              fileSize: m.fileSize || '',
+              format: m.format || '',
+              subtitle: m.subtitle || '',
+              imdbRating: String(m.imdbRating || ''),
+              rtRating: String(m.rtRating || ''),
+            });
+          }
+        } catch {
+          // If parsing the save response fails, re-fetch from server
+          setTimeout(() => fetchMovie(), 500);
+        }
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
       } else {

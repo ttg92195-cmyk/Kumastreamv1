@@ -121,13 +121,13 @@ export default function EditSeriesPage() {
     }
   }, [_hasHydrated, admin, router]);
 
-  // Fetch series data
+  // Fetch series data — always bypass cache to get latest data for editing
   const fetchSeries = useCallback(async () => {
     if (!seriesId) return;
 
     setLoading(true);
     try {
-      const res = await fetch(`/api/series/${seriesId}`);
+      const res = await fetch(`/api/series/${seriesId}?_nocache=1`, { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         const s = data.series;
@@ -308,6 +308,10 @@ export default function EditSeriesPage() {
       }
 
       setModifiedEpisodes(new Set());
+
+      // Re-fetch series data from server to ensure local state matches
+      // what was actually saved (bypasses any stale cache).
+      setTimeout(() => fetchSeries(), 500);
     } catch (err: any) {
       console.error('Error updating series:', err);
       alert('Failed to update series: ' + (err.message || 'Unknown error'));

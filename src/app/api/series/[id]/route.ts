@@ -4,7 +4,8 @@ export const revalidate = 600;
 import { NextResponse, NextRequest } from 'next/server';
 import { validateAdminAuth, isValidDownloadUrl, sanitizeError } from '@/lib/auth';
 import { checkRateLimit, getClientIp, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit';
-import { getCachedSeriesDetail, getCachedSimilarSeries, getCachedSeriesBySlug, isCuid, invalidateSeriesCache } from '@/lib/cache';
+import { getCachedSeriesDetail, getCachedSimilarSeries, getCachedSeriesBySlug, getUncachedSeriesDetail, isCuid, invalidateSeriesCache } from '@/lib/cache';
+import { safeRead } from '@/lib/db';
 
 // Placeholder image for missing posters
 const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAwIiBoZWlnaHQ9Ijc1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjIyIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM2NjYiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
@@ -75,16 +76,47 @@ export async function GET(
 
     console.log('Fetching series with ID:', id);
 
+    // Check if admin wants fresh data (bypass cache)
+    const { searchParams } = new URL(request.url);
+    const bypassCache = searchParams.get('_nocache') === '1';
+
     let series: any = null;
 
-    // Try to fetch from database (uses cached query)
+    // Try to fetch from database
     try {
-      // First try direct ID lookup (CUID)
-      let dbSeries = isCuid(id) ? await getCachedSeriesDetail(id) : null;
+      let dbSeries: any = null;
 
-      // If not found by ID, try slug lookup (SEO-friendly URLs like /series/game-of-thrones)
-      if (!dbSeries) {
-        dbSeries = await getCachedSeriesBySlug(id);
+      if (bypassCache) {
+        // Admin edit page: always get latest data directly from database
+        dbSeries = isCuid(id) ? await getUncachedSeriesDetail(id) : null;
+        if (!dbSeries) {
+          // Try slug lookup with uncached query
+          const slugTitle = id.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+          dbSeries = await safeRead(client => client.series.findFirst({
+            where: { title: { equals: slugTitle, mode: 'insensitive' } },
+            include: {
+              casts: true,
+              episodes: { orderBy: [{ season: 'asc' }, { episode: 'asc' }], include: { downloadLinks: true } },
+              downloadLinks: true,
+            },
+          }));
+          if (!dbSeries) {
+            dbSeries = await safeRead(client => client.series.findFirst({
+              where: { title: { contains: slugTitle, mode: 'insensitive' } },
+              include: {
+                casts: true,
+                episodes: { orderBy: [{ season: 'asc' }, { episode: 'asc' }], include: { downloadLinks: true } },
+                downloadLinks: true,
+              },
+            }));
+          }
+        }
+      } else {
+        // Public request: use cached query for performance
+        dbSeries = isCuid(id) ? await getCachedSeriesDetail(id) : null;
+        if (!dbSeries) {
+          dbSeries = await getCachedSeriesBySlug(id);
+        }
       }
 
       if (dbSeries) {

@@ -4,7 +4,8 @@ export const revalidate = 600;
 import { NextResponse, NextRequest } from 'next/server';
 import { validateAdminAuth, isValidDownloadUrl, sanitizeError } from '@/lib/auth';
 import { checkRateLimit, getClientIp, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit';
-import { getCachedMovieDetail, getCachedSimilarMovies, getCachedMovieBySlug, isCuid, invalidateMovieCache } from '@/lib/cache';
+import { getCachedMovieDetail, getCachedSimilarMovies, getCachedMovieBySlug, getUncachedMovieDetail, isCuid, invalidateMovieCache } from '@/lib/cache';
+import { safeRead } from '@/lib/db';
 
 // Placeholder image for missing posters
 const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAwIiBoZWlnaHQ9Ijc1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjIyIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM2NjYiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
@@ -59,16 +60,39 @@ export async function GET(
 
     console.log('Fetching movie with ID:', id);
 
+    // Check if admin wants fresh data (bypass cache)
+    const { searchParams } = new URL(request.url);
+    const bypassCache = searchParams.get('_nocache') === '1';
+
     let movie: any = null;
 
-    // Try to fetch from database (uses cached query)
+    // Try to fetch from database
     try {
-      // First try direct ID lookup (CUID)
-      let dbMovie = isCuid(id) ? await getCachedMovieDetail(id) : null;
+      let dbMovie: any = null;
 
-      // If not found by ID, try slug lookup (SEO-friendly URLs like /movie/malena)
-      if (!dbMovie) {
-        dbMovie = await getCachedMovieBySlug(id);
+      if (bypassCache) {
+        // Admin edit page: always get latest data directly from database
+        dbMovie = isCuid(id) ? await getUncachedMovieDetail(id) : null;
+        if (!dbMovie) {
+          // Try slug lookup with uncached query
+          const slugTitle = id.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+          dbMovie = await safeRead(client => client.movie.findFirst({
+            where: { title: { equals: slugTitle, mode: 'insensitive' } },
+            include: { casts: true, downloadLinks: true },
+          }));
+          if (!dbMovie) {
+            dbMovie = await safeRead(client => client.movie.findFirst({
+              where: { title: { contains: slugTitle, mode: 'insensitive' } },
+              include: { casts: true, downloadLinks: true },
+            }));
+          }
+        }
+      } else {
+        // Public request: use cached query for performance
+        dbMovie = isCuid(id) ? await getCachedMovieDetail(id) : null;
+        if (!dbMovie) {
+          dbMovie = await getCachedMovieBySlug(id);
+        }
       }
 
       if (dbMovie) {

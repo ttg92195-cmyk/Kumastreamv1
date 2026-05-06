@@ -267,6 +267,37 @@ export const getCachedSeriesBySlug = unstable_cache(
 
 export { isCuid };
 
+// ─── Uncached Query Functions (for admin edit pages) ──────────────
+// These bypass unstable_cache and query the database directly.
+// Used when the edit page sends ?_nocache=1 to ensure it always
+// gets the latest data after a save.
+
+export function getUncachedMovieDetail(id: string) {
+  return safeRead(client => client.movie.findUnique({
+    where: { id },
+    include: {
+      casts: true,
+      downloadLinks: true,
+    },
+  }));
+}
+
+export function getUncachedSeriesDetail(id: string) {
+  return safeRead(client => client.series.findUnique({
+    where: { id },
+    include: {
+      casts: true,
+      episodes: {
+        orderBy: [{ season: 'asc' }, { episode: 'asc' }],
+        include: {
+          downloadLinks: true,
+        },
+      },
+      downloadLinks: true,
+    },
+  }));
+}
+
 // ─── Cache Invalidation Helpers ─────────────────────────────────
 // Call these after mutations (PUT/DELETE/POST) to bust stale cache
 
